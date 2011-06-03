@@ -1,0 +1,10 @@
+<stack>
+  <description brief="ROS package for Kinect with PIXHAWK">
+	Kinect software - see http://pixhawk.ethz.ch for a project description.
+  </description>
+  <author>Maintained by PIXHAWK-Team</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://pixhawk.ethz.ch</url>
+  <depend stack="ros"/>
+</stack>
