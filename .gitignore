@@ -13,5 +13,8 @@ CMakeFiles
 .project
 CMakeCache.txt
 Makefile
-KinectICP/bin
-KinectICP/build
+KinectICP/bin*
+KinectICP/build*
+cmake_install.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
