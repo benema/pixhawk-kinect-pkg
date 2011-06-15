@@ -13,4 +13,6 @@ CMakeFiles
 .project
 CMakeCache.txt
 Makefile
-lcm_mavlink_ros/bin/*
+KinectICP/bin
+KinectICP/build
+KinectICP/launch

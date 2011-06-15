@@ -1,0 +1,25 @@
+<package>
+  <description brief="KinectICP">
+
+     Pixhawk ROS node for ICP using Kinect
+
+  </description>
+  <author>pixhawk</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/KinectICP</url>
+
+  
+  <!-- ROS DEPENDENCIES -->
+   <depend package="std_msgs"/>
+   <depend package="rospy"/>
+   <depend package="roscpp"/>
+   <depend package="pcl"/>
+   <depend package="pcl_ros"/>
+   <depend package="geometry_msgs"/>
+   <depend package="sensor_msgs"/>
+   <depend package="opencv2"/>
+
+</package>
+
+
