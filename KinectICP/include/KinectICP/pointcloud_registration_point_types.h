@@ -47,7 +47,7 @@ namespace pcl
 
 }
 
-#include <pointcloud_registration4/pointcloud_registration_point_types.hpp>  // Include struct definitions
+#include <KinectICP/pointcloud_registration_point_types.hpp>  // Include struct definitions
 
 
 // ==============================

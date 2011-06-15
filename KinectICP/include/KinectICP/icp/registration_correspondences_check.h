@@ -238,6 +238,6 @@ namespace pcl
   };
 }
 
-#include "pointcloud_registration4/icp/registration_correspondences_check.hpp"
+#include "KinectICP/icp/registration_correspondences_check.hpp"
 
 #endif  //#ifndef _REGISTRATION_CORRESPONDENCES_CHECK_H_

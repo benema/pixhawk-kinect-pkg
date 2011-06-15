@@ -31,7 +31,7 @@
  * Based on orignal code written by Radu Rusu.
  * Modified by Hozefa Indorewala
  */
-#include <pointcloud_registration4/icp/registration_correspondences_check.h>
+#include <KinectICP/icp/registration_correspondences_check.h>
 
 #ifndef _ICP_CORRESPONDENCES_CHECK_H_
 #define _ICP_CORRESPONDENCES_CHECK_H_

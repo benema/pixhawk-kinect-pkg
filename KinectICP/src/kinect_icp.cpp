@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
-#include <pointcloud_registration4/pointcloud_registration_point_types.h>
+#include <KinectICP/pointcloud_registration_point_types.h>
 #include <pcl/io/pcd_io.h>
 #include <Eigen/SVD>
 #include <sensor_msgs/point_cloud_conversion.h>
@@ -34,7 +34,7 @@
 #include "pcl/registration/transforms.h" //for the transformation function
 #include <pcl/features/normal_3d_omp.h>
 
-#include <pointcloud_registration4/icp/icp_correspondences_check.h> //for icp
+#include <KinectICP/icp/icp_correspondences_check.h> //for icp
 #include <algorithm> //for the sort and unique functions
 
 #include <ctime>
