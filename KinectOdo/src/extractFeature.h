@@ -1,7 +1,55 @@
+/**
+\mainpage
+\htmlinclude manifest.html
 
+\b The Pathplanner package contains a ROS service which calculates the shortest path with the help of a Dijkstra algorithm and SQLITE3 database.
+
+
+\section rosapi ROS API
+
+There is only one ROS service in this package.
+
+List of nodes:
+- \b path_server
+
+
+<!-- START: copy for each node -->
+
+<hr>
+
+\subsection pathplanner path_server
+
+path takes a start and end waypoint and returns the GPS-Waypoints in between based on the SQLITE3 database given to the algorithm.
+
+\subsubsection Usage
+\verbatim
+$ rosservice call path [start node] [end node]
+\endverbatim
+
+\par Example
+
+\verbatim
+$ rosservice call path 1 3
+\endverbatim
+
+
+
+\subsubsection services ROS services
+- \b "path": [oa_communication/path] the path service takes as input two ints and returns a nav_msgs/Odometry vector with the path.
+
+
+<!-- END: copy for each node -->
+
+
+//*DATABASE
+/*!
+ * The DATABASE class handles all the sqlite3 work within the Pathplanner package. It opens the database to a given path and
+ * copies the entries into arrays. Some code is copied from an online sqlite3 tutorial (http://freshmeat.net/articles/sqlite-tutorial).
+ */
 #include <ros/ros.h>
 #include <math.h>
 #include "sensor_msgs/Image.h"
+#include <sensor_msgs/Imu.h>
 #include "image_transport/image_transport.h"
 #include "cv_bridge/CvBridge.h"
 #include <opencv/cv.h>
@@ -10,11 +58,8 @@
 #include "pcl/point_types.h"
 #include "pcl/io/pcd_io.h"
 #include <pcl_ros/point_cloud.h>
-//#include <pcl_visualization/cloud_viewer.h>
 #include <pcl/point_types.h>
 #include "pcl/range_image/range_image.h"
-//#include "pcl_visualization/range_image_visualizer.h"
-//#include "pcl_visualization/pcl_visualizer.h"
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
@@ -39,15 +84,14 @@
 #include </opt/ros/diamondback/stacks/perception_pcl/pcl/include/pcl/registration/icp_nl.h>
 #include "pcl/registration/icp.h"
 #include "pcl/registration/icp_nl.h"
-//#include <vector>
 
 #include <nav_msgs/Path.h>
 
 
 //sba stuff
 //SBA
-#include <sba/sba.h>
-#include <sba/visualization.h>
+//#include <sba/sba.h>
+//#include <sba/visualization.h>
 
 
 
@@ -55,7 +99,8 @@
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 typedef pcl::PointXYZ Point;
 #define depth_topic "/camera/depth/points"
-#define STORE_POINTS_IN_SBA sys.addPoint(temppoint);
+//SBA
+//#define STORE_POINTS_IN_SBA sys.addPoint(temppoint);
 
 
 //typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloud;
@@ -63,24 +108,28 @@ typedef pcl::PointXYZ Point;
 //#define depth_topic "/camera/rgb/points"
 //#define STORE_POINTS_IN_SBA sys.addPoint(temppoint,SBAPoint.at(i).PointXYZ.rgb);
 
+//sba
+//typedef std::map<const int, sba::Proj, std::less<int>, Eigen::aligned_allocator<sba::Proj> > ProjMap;
 
-typedef std::map<const int, sba::Proj, std::less<int>, Eigen::aligned_allocator<sba::Proj> > ProjMap;
-
-
+//* Class to compute the visual Odometry with a Kinect
+/**
+ * Class to compute the visual Odometry with a Kinect. The position is published with a ROS publisher.
+ */
 class EXTRACT
 {
 private:
     bool slammed;
+    bool notcopied;
 
 	//SBA stuff
-	int maxx;
-	int maxy;
-	uint project_counter;
+//	int maxx;
+//	int maxy;
+//	uint project_counter;
 //	sba::SysSBA sys;
 
-	//Variables for SBA
-	frame_common::CamParams cam_params;
-	vector<Eigen::Vector4d > points;
+	//Variables for //SBA
+//	frame_common::CamParams cam_params;
+//	vector<Eigen::Vector4d > points;
 
 	//Vector for correspondcense
 	std::vector<int> correspondences;
@@ -98,6 +147,10 @@ private:
 	Eigen::Matrix4f transform1;
 	Eigen::Matrix4f transform2;
 	Eigen::Matrix4f transform3;
+	Eigen::Matrix4f imuRot;
+
+
+    ros::Subscriber imuSubscriber;
 	//pointclouds
 	PointCloud outputCloud;
 	PointCloud outputall;
@@ -177,13 +230,16 @@ private:
     pcl::PointCloud<pcl::PointXYZRGB> kinectCloudall;
 
 	geometry_msgs::PoseStamped cameraPose;
+	geometry_msgs::PoseStamped heliPose;
 	nav_msgs::Path path;
 
 	ros::Publisher path_pub;
-	ros::Publisher camSBA_marker_pub;
-	ros::Publisher camSBA_marker_pub_preSBA;
-	ros::Publisher pointSBA_marker_pub;
-	ros::Publisher pointSBA_marker_pub_preSBA;
+	ros::Publisher bodyPoseStamped_pub;
+	//SBA
+//	ros::Publisher camSBA_marker_pub;
+//	ros::Publisher camSBA_marker_pub_preSBA;
+//	ros::Publisher pointSBA_marker_pub;
+//	ros::Publisher pointSBA_marker_pub_preSBA;
 	ros::Publisher cameraPose_pub;
     ros::Publisher transformedCloud;
     //for keyframes
@@ -217,10 +273,14 @@ private:
 
 
     Eigen::Quaternion<float> quat_rot;
+    Eigen::Quaternion<float> quat_imu;
+    Eigen::Quaternion<float> quat_rot_heli;
     Eigen::Quaternion<float> quat_rot_keyframe;
 
 	Eigen::Matrix3f rot_matrix;
 	Eigen::Vector3f trans_vec;
+	Eigen::Matrix3f rot_matrix_heli;
+	Eigen::Vector3f trans_vec_heli;
 	Eigen::Vector3f trans_vec_keyframe;
 	Eigen::Vector3f trans_vec_tmp;
 
@@ -290,20 +350,20 @@ private:
 		vector<int> correspondences_backward;
 
 	};
-
-	struct SBAmap{
-		std::vector<PointCloud> Points;
-		std::vector<cv::Mat> Descriptor;
-	};
-	struct SBAmap SBAmap;
+//SBA
+//	struct SBAmap{
+//		std::vector<PointCloud> Points;
+//		std::vector<cv::Mat> Descriptor;
+//	};
+//	struct SBAmap SBAmap;
 
 	struct mapPoint{
 		Point PointXYZ;
 		std::vector<std::vector<int> > cameras;
 		int identifier;
 	};
-
-	std::vector<struct mapPoint> SBAPoint;
+//SBA
+//	std::vector<struct mapPoint> SBAPoint;
 	int nearest_keyframe_inliers;
 
 	struct FrameData FrameData[2];
@@ -311,25 +371,28 @@ private:
 	uint DataVectorIt;
 	uint actual_keyframe;
 	std::vector<int> prev_corresp;
-
-	PointCloud afterSBAPointCloud;
+//SBA
+//	PointCloud afterSBAPointCloud;
 
 	void swap();
 	void findNearestKeyframetoLastandComputeTransformation(struct FrameData& Last);
 
 	void createCorrespondingPointcloud(struct FrameData& Data0,PointCloud& Cloud0,struct FrameData& Data1,PointCloud& Cloud1,std::vector<int>& correspondvector,vector<cv::DMatch>& matches);
 	void createCorrespondingPointcloud(struct FrameData& Data0,PointCloud& Cloud0,struct FrameData& Data1,PointCloud& Cloud1,std::vector<int>& correspondvector,vector<cv::DMatch>& matches,bool show,std::vector<cv::KeyPoint>& kpts0,std::vector<cv::KeyPoint>& kpts1);
-
-	void doSBAthing(std::vector<int> correspond,struct FrameData data0,struct FrameData data1,vector<cv::DMatch> matches );
-	void doSBAwithMap();
-	void SBARANSAC(struct FrameData &Data,	vector<cv::DMatch> &matches, std::vector<int> &corresKey,std::vector<int> &corresSBA, int keyframenumber,PointCloud &sbacloud);
-	void ownSBARANSAC(struct FrameData &Data,	vector<cv::DMatch> &matches, std::vector<int> &corresKey,std::vector<int> &corresSBA,int keyframenumber,PointCloud &sbacloud);
+//SBA
+//	void doSBAthing(std::vector<int> correspond,struct FrameData data0,struct FrameData data1,vector<cv::DMatch> matches );
+//	void doSBAwithMap();
+//	void SBARANSAC(struct FrameData &Data,	vector<cv::DMatch> &matches, std::vector<int> &corresKey,std::vector<int> &corresSBA, int keyframenumber,PointCloud &sbacloud);
+//	void ownSBARANSAC(struct FrameData &Data,	vector<cv::DMatch> &matches, std::vector<int> &corresKey,std::vector<int> &corresSBA,int keyframenumber,PointCloud &sbacloud);
 //	void PosEst();
+	void imuCallback(const sensor_msgs::Imu& imuMsg);
+
+
 
 public:
 	EXTRACT(bool displ,float thresh, int iterations,int minimal_inliers, int keyframe_inliers,bool time, bool slam,int ignored, int near_keyframe_inliers, int swaps);
 	~EXTRACT(){cvDestroyAllWindows();fclose (pFile);
-	for(uint f; f<track_vector.size();f++)
+	for(uint f=0; f<track_vector.size();f++)
 		cvReleaseImage(&track_vector.at(f));
 	/*cvReleaseMemStorage(&briefFrameStorage);cvReleaseMemStorage(&briefMapStorage);*//*cvReleaseImage(&imgadd);cvReleaseImage(&cv_image[0]);cvReleaseImage(&cv_image[1]);*//*cvReleaseImage(&callback_image[0]);cvReleaseImage(&callback_image[1]);*/};
 	void display();

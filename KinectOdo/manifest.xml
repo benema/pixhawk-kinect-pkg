@@ -20,7 +20,6 @@
   <depend package="flann"/>
   <depend package="geometry_msgs"/>
   <depend package="nav_msgs"/>
-    <depend package="sba"/>
 </package>
 
 
