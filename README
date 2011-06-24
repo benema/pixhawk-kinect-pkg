@@ -1,1 +1,2 @@
-Kinect software - see http://pixhawk.ethz.ch for a project description.
+In order to get the STACK running install all de dependencies by "rosdep --install" and then do rosmake in the folder. Everything should work. In the SBA package three files have to be replaced. The files are in the SBA files folder. They just have to be replaced with the corresponding files in the package. But it should run without them. To start the KinectOdo package, here is a litte howto:
+http://pixhawk.ethz.ch/wiki/tutorials/camera/kinect/kinectodo
