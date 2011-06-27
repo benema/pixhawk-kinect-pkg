@@ -2969,6 +2969,7 @@ void EXTRACT::createCorrespondingPointcloud(struct FrameData& Data0,PointCloud& 
 
 void EXTRACT::viconCallback (const geometry_msgs::PoseStamped& viconMsg)
 {
+	std::cout<<"in viconcallback"<<std::endl;
 	quat_vicon.x()=viconMsg.pose.orientation.x;
 	quat_vicon.y()=viconMsg.pose.orientation.y;
 	quat_vicon.z()=viconMsg.pose.orientation.z;
@@ -2984,6 +2985,7 @@ void EXTRACT::viconCallback (const geometry_msgs::PoseStamped& viconMsg)
 
 void EXTRACT::commandCallback (const lcm_mavlink_ros::COMMAND& commandMsg)
 {
+	std::cout<<"in commandcallback"<<std::endl;
 	if(commandMsg.command==200)
 		take_vicon=true;
 	if(commandMsg.command==201)
