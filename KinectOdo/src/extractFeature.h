@@ -87,6 +87,10 @@ $ rosservice call path 1 3
 
 #include <nav_msgs/Path.h>
 
+//LCMStuff
+//#include "/home/benema/ros_tutorials/Kinect-Pixhawk/mavlink-ros-pkg/lcm_mavlink_ros/msg_gen/cpp/include/lcm_mavlink_ros/COMMAND.h"
+#include "../../../mavlink-ros-pkg/lcm_mavlink_ros/msg_gen/cpp/include/lcm_mavlink_ros/COMMAND.h"
+
 
 //sba stuff
 //SBA
@@ -149,8 +153,10 @@ private:
 	Eigen::Matrix4f transform3;
 	Eigen::Matrix4f imuRot;
 
-
+//to fly
     ros::Subscriber imuSubscriber;
+    ros::Subscriber viconSubscriber;
+    ros::Subscriber commandSubscriber;
 	//pointclouds
 	PointCloud outputCloud;
 	PointCloud outputall;
@@ -273,7 +279,13 @@ private:
 
 
     Eigen::Quaternion<float> quat_rot;
+    //to fly
     Eigen::Quaternion<float> quat_imu;
+    Eigen::Quaternion<float> quat_vicon;
+    Eigen::Vector3f pos_vicon;
+
+    bool take_vicon;
+    bool reset_map;
     Eigen::Quaternion<float> quat_rot_heli;
     Eigen::Quaternion<float> quat_rot_keyframe;
 
@@ -386,6 +398,10 @@ private:
 //	void ownSBARANSAC(struct FrameData &Data,	vector<cv::DMatch> &matches, std::vector<int> &corresKey,std::vector<int> &corresSBA,int keyframenumber,PointCloud &sbacloud);
 //	void PosEst();
 	void imuCallback(const sensor_msgs::Imu& imuMsg);
+	void commandCallback (const lcm_mavlink_ros::COMMAND& commandMsg);
+	void viconCallback (const geometry_msgs::PoseStamped& viconMsg);
+
+
 
 
 

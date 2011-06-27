@@ -14,6 +14,7 @@ static CvScalar colors[] =
 };
 
 
+
 //code partially copied from http://www.cs.unc.edu/~blloyd/comp290-089/fmatrix/
 void EXTRACT::RANSAC()
 {
@@ -451,6 +452,8 @@ void EXTRACT::matchFeature(cv::Mat &dtors0,cv::Mat&dtors1,	vector<cv::DMatch> &m
 
 EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, int keyframe_inliers, bool time, bool slam,int ignored, int near_keyframe_inliers, int swaps)
 {
+	take_vicon=false;
+	reset_map=false;
 
 	notcopied=1;
 
@@ -594,7 +597,10 @@ EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, i
 //	camSBA_marker_pub_preSBA = n.advertise<visualization_msgs::Marker>("/mainSLAM/cameras_preSBA", 1);
 //	pointSBA_marker_pub_preSBA = n.advertise<visualization_msgs::Marker>("/mainSLAM/points_preSBA", 1);
 
+	//to fly
 	imuSubscriber = n.subscribe ("/fromMAVLINK/Imu",  1, &EXTRACT::imuCallback,  this);
+	viconSubscriber= n.subscribe("/fromMAVLINK/Vicon",1,&EXTRACT::viconCallback,this);
+	commandSubscriber= n.subscribe("/fromMAVLINK/COMMAND",1,&EXTRACT::commandCallback,this);
 
 
 	sync.registerCallback(&EXTRACT::callback,this);
@@ -1818,6 +1824,36 @@ void EXTRACT::PosEst()
 		}
 		transformOld=KeyframeDataVector.at(actual_keyframe).Transformation*transformation_;
 
+		if(take_vicon)
+		{
+			Eigen::Matrix4f Rotz=Eigen::Matrix4f::Identity();
+
+			Rotz.col(0)[0]=cos(M_PI/2);
+			Rotz.col(0)[1]=-sin(M_PI/2);
+			Rotz.col(1)[0]=sin(M_PI/2);
+			Rotz.col(1)[1]=cos(M_PI/2);
+
+		//	Eigen::Matrix4f Roty=Eigen::Matrix4f::Identity();
+		//
+		//	Roty.col(0)[0]=cos(-M_PI/2);
+		//	Roty.col(0)[2]=sin(-M_PI/2);
+		//	Roty.col(2)[0]=-sin(-M_PI/2);
+		//	Roty.col(2)[2]=cos(-M_PI/2);
+
+			Eigen::Matrix4f Rotx=Eigen::Matrix4f::Identity();
+			Rotx.col(1)[1]=cos(M_PI/2);
+			Rotx.col(1)[2]=-sin(M_PI/2);
+			Rotx.col(2)[1]=sin(M_PI/2);
+			Rotx.col(2)[2]=cos(M_PI/2);
+		Eigen::Matrix3f matrix(quat_vicon);
+
+		Eigen::Matrix4f vicontransform=Eigen::Matrix4f::Identity();
+
+		vicontransform.block<3,1>(0,3)=pos_vicon;
+		vicontransform.block<3,3>(0,0)=matrix;
+		transformOld=Rotz*Rotx*vicontransform;
+		}
+
 
 	}
 	else
@@ -2928,6 +2964,29 @@ void EXTRACT::createCorrespondingPointcloud(struct FrameData& Data0,PointCloud& 
 //	std::cout<<"sbatrans"<<sbatrans<<std::endl;;
 //
 //}
+
+void EXTRACT::viconCallback (const geometry_msgs::PoseStamped& viconMsg)
+{
+	quat_vicon.x()=viconMsg.pose.orientation.x;
+	quat_vicon.y()=viconMsg.pose.orientation.y;
+	quat_vicon.z()=viconMsg.pose.orientation.z;
+	quat_vicon.w()=viconMsg.pose.orientation.w;
+
+	pos_vicon[0]=viconMsg.pose.position.x;
+	pos_vicon[1]=viconMsg.pose.position.y;
+	pos_vicon[2]=viconMsg.pose.position.z;
+
+
+
+}
+
+void EXTRACT::commandCallback (const lcm_mavlink_ros::COMMAND& commandMsg)
+{
+	if(commandMsg.command==200)
+		take_vicon=true;
+	if(commandMsg.command==201)
+		reset_map=true;
+}
 
 
 void EXTRACT::imuCallback (const sensor_msgs::Imu& imuMsg)
