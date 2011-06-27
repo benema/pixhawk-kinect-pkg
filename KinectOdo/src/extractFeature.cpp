@@ -1852,6 +1852,8 @@ void EXTRACT::PosEst()
 		vicontransform.block<3,1>(0,3)=pos_vicon;
 		vicontransform.block<3,3>(0,0)=matrix;
 		transformOld=Rotz*Rotx*vicontransform;
+
+		std::cout<<"vicontransform:"<<std::endl<<vicontransform<<std::endl;
 		}
 
 
