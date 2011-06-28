@@ -199,6 +199,7 @@ private:
 	bool called;
 	bool doSLAM;
 	bool called_first_time;
+	bool take_vicon_z;
 	int q;
 	int numberOfIgnoredKeyframes;
 	bool showDisplay;
