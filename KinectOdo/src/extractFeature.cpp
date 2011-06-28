@@ -247,20 +247,20 @@ void EXTRACT::RANSAC()
 //					m.getRPY(Roll, Pitch, Yaw);
 
 
-				Eigen::Quaternion<float> quat_vicon_eigen;
-				quat_vicon_eigen.x()=quat_vicon.x();
-				quat_vicon_eigen.y()=quat_vicon.y();
-				quat_vicon_eigen.z()=quat_vicon.z();
-				quat_vicon_eigen.w()=quat_vicon.w();
+//				Eigen::Quaternion<float> quat_vicon_eigen;
+//				quat_vicon_eigen.x()=quat_vicon.x();
+//				quat_vicon_eigen.y()=quat_vicon.y();
+//				quat_vicon_eigen.z()=quat_vicon.z();
+//				quat_vicon_eigen.w()=quat_vicon.w();
 
 				Eigen::Quaternion<float> quat_tmp;
-				quat_tmp.w()=quat_rot.w();
-				quat_tmp.x()=-quat_rot.y();
-				quat_tmp.y()=-quat_rot.z();
-				quat_tmp.z()=quat_rot.x();
+				quat_tmp.w()=quat_vicon.w();
+				quat_tmp.x()=-quat_vicon.y();
+				quat_tmp.y()=-quat_vicon.z();
+				quat_tmp.z()=quat_vicon.x();
 
 
-				quat_tmp=quat_vicon_eigen*quat_tmp;
+//				quat_tmp=quat_vicon_eigen*quat_tmp;
 
 
 				btQuaternion tmp_quat(quat_tmp.x(),quat_tmp.y(),quat_tmp.z(),quat_tmp.w());
