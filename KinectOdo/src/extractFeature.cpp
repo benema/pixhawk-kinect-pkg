@@ -3147,7 +3147,7 @@ void EXTRACT::imuCallback (const sensor_msgs::Imu& imuMsg)
 //
 	Eigen::Matrix4f RotYPitch=Eigen::Matrix4f::Identity();
 
-	RotYPitch.col(0)[0]=cos(-Yae);
+	RotYPitch.col(0)[0]=cos(-Yaw);
 	RotYPitch.col(0)[2]=-sin(-Yaw);
 	RotYPitch.col(2)[0]=sin(-Yaw);
 	RotYPitch.col(2)[2]=cos(-Yaw);
