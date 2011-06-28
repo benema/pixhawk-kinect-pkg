@@ -350,7 +350,10 @@ void EXTRACT::publishEverything()
 	heliPose.header.stamp=ros::Time::now();
 	heliPose.pose.position.x=trans_vec[2];
 	heliPose.pose.position.y=trans_vec[0];
-	heliPose.pose.position.z=trans_vec[1];
+	if(take_vicon_z)
+		heliPose.pose.position.z=pos_vicon[2];
+	else
+		heliPose.pose.position.z=trans_vec[1];
 
 	Eigen::Quaternion<float> quat_tmp;
 	quat_tmp.w()=quat_rot.w();
@@ -364,6 +367,8 @@ void EXTRACT::publishEverything()
 	heliPose.pose.orientation.x=quat_tmp.x();
 	heliPose.pose.orientation.y=quat_tmp.y();
 	heliPose.pose.orientation.z=quat_tmp.z();
+
+
 
 
 	//imuMutex_.lock();
@@ -579,6 +584,7 @@ void EXTRACT::matchFeature(cv::Mat &dtors0,cv::Mat&dtors1,	vector<cv::DMatch> &m
 
 EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, int keyframe_inliers, bool time, bool slam,int ignored, int near_keyframe_inliers, int swaps)
 {
+	take_vicon_z=swaps;
 	take_vicon=false;
 	reset_map=false;
 
