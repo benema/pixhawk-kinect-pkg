@@ -254,7 +254,7 @@ void EXTRACT::RANSAC()
 				quat_vicon_eigen.w()=quat_vicon.w();
 
 
-				btQuaternion quat_tmp(-quat_vicon.y(),-quat_vicon.z(),quat_vicon.x(),quat_vicon.w());
+				btQuaternion quat_tmp(quat_vicon.y(),quat_vicon.z(),quat_vicon.x(),quat_vicon.w());
 
 
 //				quat_tmp=quat_vicon_eigen*quat_tmp;
@@ -293,8 +293,8 @@ void EXTRACT::RANSAC()
 
 		vicontransform.block<3,1>(0,2)=tmp_vec;
 
-		tmp_vec[0]=-pos_vicon[1];
-		tmp_vec[1]=-pos_vicon[2];
+		tmp_vec[0]=pos_vicon[1];
+		tmp_vec[1]=pos_vicon[2];
 		tmp_vec[2]=pos_vicon[0];
 
 		vicontransform.block<3,1>(0,3)=tmp_vec;
