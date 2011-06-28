@@ -367,15 +367,15 @@ void EXTRACT::publishEverything()
 
 
 	//imuMutex_.lock();
-		btQuaternion q(quat_rot_heli.x(), quat_rot_heli.y(), quat_rot_heli.z(), quat_rot_heli.w());
-		btMatrix3x3 m(q);
-		std::cout<<"m:"<<m.getRow(0)[0]<<" "<<m.getRow(0)[1]<<" "<<m.getRow(0)[2]<<std::endl
-				<<" "<<m.getRow(1)[0]<<" "<<m.getRow(1)[1]<<" "<<m.getRow(1)[2]<<std::endl
-				<<" "<<m.getRow(2)[0]<<" "<<m.getRow(2)[1]<<" "<<m.getRow(2)[2]<<std::endl;
-		double Roll, Pitch, Yaw;
-		m.getRPY(Roll, Pitch, Yaw);
-
-		std::cout<<"rollend:"<<Roll<<"pitchend"<<Pitch<<"Yawend"<<Yaw<<std::endl;
+//		btQuaternion q(quat_rot_heli.x(), quat_rot_heli.y(), quat_rot_heli.z(), quat_rot_heli.w());
+//		btMatrix3x3 m(q);
+//		std::cout<<"m:"<<m.getRow(0)[0]<<" "<<m.getRow(0)[1]<<" "<<m.getRow(0)[2]<<std::endl
+//				<<" "<<m.getRow(1)[0]<<" "<<m.getRow(1)[1]<<" "<<m.getRow(1)[2]<<std::endl
+//				<<" "<<m.getRow(2)[0]<<" "<<m.getRow(2)[1]<<" "<<m.getRow(2)[2]<<std::endl;
+//		double Roll, Pitch, Yaw;
+//		m.getRPY(Roll, Pitch, Yaw);
+//
+//		std::cout<<"rollend:"<<Roll<<"pitchend"<<Pitch<<"Yawend"<<Yaw<<std::endl;
 
 	bodyPoseStamped_pub.publish(heliPose);
 
@@ -3110,29 +3110,29 @@ void EXTRACT::imuCallback (const sensor_msgs::Imu& imuMsg)
 
 	Yaw=0;
 
-	Eigen::Matrix4f RotXRoll=Eigen::Matrix4f::Identity();
-	RotXRoll.col(1)[1]=cos(-Roll);
-	RotXRoll.col(1)[2]=-sin(-Roll);
-	RotXRoll.col(2)[1]=sin(-Roll);
-	RotXRoll.col(2)[2]=cos(-Roll);
+	Eigen::Matrix4f RotXPitch=Eigen::Matrix4f::Identity();
+	RotXPitch.col(1)[1]=cos(-Pitch);
+	RotXPitch.col(1)[2]=sin(-Pitch);
+	RotXPitch.col(2)[1]=-sin(-Pitch);
+	RotXPitch.col(2)[2]=cos(-Pitch);
 
 //	std::cout<<"rollxroll\n"<<RotXRoll<<std::endl;
 
-	Eigen::Matrix4f RotYPitch=Eigen::Matrix4f::Identity();
+	Eigen::Matrix4f RotYYaw=Eigen::Matrix4f::Identity();
 
-	RotYPitch.col(0)[0]=cos(-Pitch);
-	RotYPitch.col(0)[2]=sin(-Pitch);
-	RotYPitch.col(2)[0]=-sin(-Pitch);
-	RotYPitch.col(2)[2]=cos(-Pitch);
+	RotYYaw.col(0)[0]=cos(-Yaw);
+	RotYYaw.col(0)[2]=-sin(-Yaw);
+	RotYYaw.col(2)[0]=sin(-Yaw);
+	RotYYaw.col(2)[2]=cos(-Yaw);
 //	std::cout<<"rollpitch\n"<<RotYPitch<<std::endl;
 
 
-	Eigen::Matrix4f RotZYaw=Eigen::Matrix4f::Identity();
+	Eigen::Matrix4f RotZRoll=Eigen::Matrix4f::Identity();
 
-	RotZYaw.col(0)[0]=cos(Yaw);
-	RotZYaw.col(0)[1]=-sin(Yaw);
-	RotZYaw.col(1)[0]=sin(Yaw);
-	RotZYaw.col(1)[1]=cos(Yaw);
+	RotZRoll.col(0)[0]=cos(-Roll);
+	RotZRoll.col(0)[1]=sin(-Roll);
+	RotZRoll.col(1)[0]=-sin(-Roll);
+	RotZRoll.col(1)[1]=cos(-Roll);
 //	std::cout<<"rollyaw\n"<<RotZYaw<<std::endl;
 //
 //
@@ -3172,7 +3172,7 @@ void EXTRACT::imuCallback (const sensor_msgs::Imu& imuMsg)
 //	double Raw2, Pitch2, Yaw2;
 //	m2.getRPY(Raw2, Pitch2, Yaw2);
 	//1st
-	imuRot=RotXRoll*RotYPitch*RotZYaw;//Rotz*Rotx*RotXRoll*RotYPitch*RotZYaw;//Eigen::Matrix4f::Identity();
+	imuRot=RotXPitch*RotYYaw*RotZRoll;//Rotz*Rotx*RotXRoll*RotYPitch*RotZYaw;//Eigen::Matrix4f::Identity();
 	std::cout<<"imurot"<<std::endl<<imuRot<<std::endl;
 //	imuRot=Eigen::Matrix4f::Identity();
 //	imuRot.col(0)[0]=(float)cos(Pitch);
