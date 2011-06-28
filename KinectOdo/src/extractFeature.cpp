@@ -3147,10 +3147,10 @@ void EXTRACT::imuCallback (const sensor_msgs::Imu& imuMsg)
 //
 	Eigen::Matrix4f RotYPitch=Eigen::Matrix4f::Identity();
 
-	RotYPitch.col(0)[0]=cos(-Pitch);
-	RotYPitch.col(0)[2]=-sin(-Pitch);
-	RotYPitch.col(2)[0]=sin(-Pitch);
-	RotYPitch.col(2)[2]=cos(-Pitch);
+	RotYPitch.col(0)[0]=cos(Pitch);
+	RotYPitch.col(0)[2]=-sin(Pitch);
+	RotYPitch.col(2)[0]=sin(Pitch);
+	RotYPitch.col(2)[2]=cos(Pitch);
 ////	std::cout<<"rollpitch\n"<<RotYPitch<<std::endl;
 //
 //
