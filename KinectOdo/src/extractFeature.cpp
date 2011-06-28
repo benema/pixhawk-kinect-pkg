@@ -3108,7 +3108,7 @@ void EXTRACT::imuCallback (const sensor_msgs::Imu& imuMsg)
 	m.getRPY(Roll, Pitch, Yaw);
 //	m.setRPY(Roll,Pitch,0);
 
-	std::cout<<"roll"<<Roll<<"pitch"<<Pitch<<"yaw"<<Yaw::std::endl;
+	std::cout<<"roll"<<Roll<<"pitch"<<Pitch<<"yaw"<<Yaw<<std::endl;
 
 
 
