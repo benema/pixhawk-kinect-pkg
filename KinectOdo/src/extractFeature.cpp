@@ -3101,12 +3101,14 @@ void EXTRACT::imuCallback (const sensor_msgs::Imu& imuMsg)
 		quat_imu.z()=imuMsg.orientation.z;
 		quat_imu.w()=imuMsg.orientation.w;
 
-//		btQuaternion q(-imuMsg.orientation.y, -imuMsg.orientation.z,imuMsg.orientation.x,  imuMsg.orientation.w);
-		btQuaternion q(imuMsg.orientation.x, -imuMsg.orientation.y,imuMsg.orientation.z,  imuMsg.orientation.w);
+		btQuaternion q(-imuMsg.orientation.y, -imuMsg.orientation.z,imuMsg.orientation.x,  imuMsg.orientation.w);
+//		btQuaternion q(imuMsg.orientation.x, -imuMsg.orientation.y,imuMsg.orientation.z,  imuMsg.orientation.w);
 	btMatrix3x3 m(q);
-	double Roll, Pitch, Yaw;
-	m.getRPY(Roll, Pitch, Yaw);
-	m.setRPY(-Pitch,0,Roll);
+//	double Roll, Pitch, Yaw;
+//	m.getRPY(Roll, Pitch, Yaw);
+//	m.setRPY(-Pitch,0,Roll);
+
+
 
 	Eigen::Vector3f tmp_vec;
 
