@@ -155,80 +155,7 @@ void EXTRACT::RANSAC()
 		//		}
 		transformOld=KeyframeDataVector.at(actual_keyframe).Transformation*transformation_;
 
-		if(take_vicon)
-			{
-	//			Eigen::Matrix4f Rotz=Eigen::Matrix4f::Identity();
-	//
-	//			Rotz.col(0)[0]=cos(M_PI/2);
-	//			Rotz.col(0)[1]=-sin(M_PI/2);
-	//			Rotz.col(1)[0]=sin(M_PI/2);
-	//			Rotz.col(1)[1]=cos(M_PI/2);
-	//
-	//		//	Eigen::Matrix4f Roty=Eigen::Matrix4f::Identity();
-	//		//
-	//		//	Roty.col(0)[0]=cos(-M_PI/2);
-	//		//	Roty.col(0)[2]=sin(-M_PI/2);
-	//		//	Roty.col(2)[0]=-sin(-M_PI/2);
-	//		//	Roty.col(2)[2]=cos(-M_PI/2);
-	//
-	//			Eigen::Matrix4f Rotx=Eigen::Matrix4f::Identity();
-	//			Rotx.col(1)[1]=cos(M_PI/2);
-	//			Rotx.col(1)[2]=-sin(M_PI/2);
-	//			Rotx.col(2)[1]=sin(M_PI/2);
-	//			Rotx.col(2)[2]=cos(M_PI/2);
-	//		Eigen::Matrix3f matrix(quat_vicon);
-				btQuaternion tmp_quat(quat_vicon.x(),quat_vicon.y(),quat_vicon.z(),quat_vicon.w());
 
-				btMatrix3x3 m(tmp_quat);
-
-	//			btMatrix3x3 m(q);
-	//					std::cout<<"m:"<<m.getRow(0)[0]<<" "<<m.getRow(0)[1]<<" "<<m.getRow(0)[2]<<std::endl
-	//							<<" "<<m.getRow(1)[0]<<" "<<m.getRow(1)[1]<<" "<<m.getRow(1)[2]<<std::endl
-	//							<<" "<<m.getRow(2)[0]<<" "<<m.getRow(2)[1]<<" "<<m.getRow(2)[2]<<std::endl;
-	//					double Roll, Pitch, Yaw;
-	//					m.getRPY(Roll, Pitch, Yaw);
-
-
-
-
-			Eigen::Matrix4f vicontransform=Eigen::Matrix4f::Identity();
-			float tmp;
-			tmp=m.getRow(0)[0];
-	//		Eigen::Matrix4f vicontransform;
-
-			Eigen::Vector3f tmp_vec;
-
-			tmp_vec[0]=m.getRow(0)[0];
-			tmp_vec[1]=m.getRow(0)[1];
-			tmp_vec[2]=m.getRow(0)[2];
-
-			vicontransform.block<3,1>(0,0)=tmp_vec;
-
-			tmp_vec[0]=m.getRow(1)[0];
-			tmp_vec[1]=m.getRow(1)[1];
-			tmp_vec[2]=m.getRow(1)[2];
-
-			vicontransform.block<3,1>(0,1)=tmp_vec;
-
-			tmp_vec[0]=m.getRow(2)[0];
-			tmp_vec[1]=m.getRow(2)[1];
-			tmp_vec[2]=m.getRow(2)[2];
-
-			vicontransform.block<3,1>(0,2)=tmp_vec;
-
-			tmp_vec[0]=pos_vicon[2];
-			tmp_vec[1]=pos_vicon[0];
-			tmp_vec[2]=pos_vicon[1];
-
-			vicontransform.block<3,1>(0,3)=tmp_vec;
-
-	//		vicontransform.block<3,3>(0,0)=matrix;
-			transformOld=vicontransform;
-
-			std::cout<<"vicontransform:"<<std::endl<<vicontransform<<std::endl;
-
-			take_vicon=false;
-			}
 
 //				Eigen::Matrix4f Rotz=Eigen::Matrix4f::Identity();
 //
@@ -285,6 +212,81 @@ void EXTRACT::RANSAC()
 
 
 	}
+	if(take_vicon)
+		{
+		next_keyframe=true;
+//			Eigen::Matrix4f Rotz=Eigen::Matrix4f::Identity();
+//
+//			Rotz.col(0)[0]=cos(M_PI/2);
+//			Rotz.col(0)[1]=-sin(M_PI/2);
+//			Rotz.col(1)[0]=sin(M_PI/2);
+//			Rotz.col(1)[1]=cos(M_PI/2);
+//
+//		//	Eigen::Matrix4f Roty=Eigen::Matrix4f::Identity();
+//		//
+//		//	Roty.col(0)[0]=cos(-M_PI/2);
+//		//	Roty.col(0)[2]=sin(-M_PI/2);
+//		//	Roty.col(2)[0]=-sin(-M_PI/2);
+//		//	Roty.col(2)[2]=cos(-M_PI/2);
+//
+//			Eigen::Matrix4f Rotx=Eigen::Matrix4f::Identity();
+//			Rotx.col(1)[1]=cos(M_PI/2);
+//			Rotx.col(1)[2]=-sin(M_PI/2);
+//			Rotx.col(2)[1]=sin(M_PI/2);
+//			Rotx.col(2)[2]=cos(M_PI/2);
+//		Eigen::Matrix3f matrix(quat_vicon);
+			btQuaternion tmp_quat(quat_vicon.x(),quat_vicon.y(),quat_vicon.z(),quat_vicon.w());
+
+			btMatrix3x3 m(tmp_quat);
+
+//			btMatrix3x3 m(q);
+//					std::cout<<"m:"<<m.getRow(0)[0]<<" "<<m.getRow(0)[1]<<" "<<m.getRow(0)[2]<<std::endl
+//							<<" "<<m.getRow(1)[0]<<" "<<m.getRow(1)[1]<<" "<<m.getRow(1)[2]<<std::endl
+//							<<" "<<m.getRow(2)[0]<<" "<<m.getRow(2)[1]<<" "<<m.getRow(2)[2]<<std::endl;
+//					double Roll, Pitch, Yaw;
+//					m.getRPY(Roll, Pitch, Yaw);
+
+
+
+
+		Eigen::Matrix4f vicontransform=Eigen::Matrix4f::Identity();
+		float tmp;
+		tmp=m.getRow(0)[0];
+//		Eigen::Matrix4f vicontransform;
+
+		Eigen::Vector3f tmp_vec;
+
+		tmp_vec[0]=m.getRow(0)[0];
+		tmp_vec[1]=m.getRow(0)[1];
+		tmp_vec[2]=m.getRow(0)[2];
+
+		vicontransform.block<3,1>(0,0)=tmp_vec;
+
+		tmp_vec[0]=m.getRow(1)[0];
+		tmp_vec[1]=m.getRow(1)[1];
+		tmp_vec[2]=m.getRow(1)[2];
+
+		vicontransform.block<3,1>(0,1)=tmp_vec;
+
+		tmp_vec[0]=m.getRow(2)[0];
+		tmp_vec[1]=m.getRow(2)[1];
+		tmp_vec[2]=m.getRow(2)[2];
+
+		vicontransform.block<3,1>(0,2)=tmp_vec;
+
+		tmp_vec[0]=pos_vicon[2];
+		tmp_vec[1]=pos_vicon[0];
+		tmp_vec[2]=pos_vicon[1];
+
+		vicontransform.block<3,1>(0,3)=tmp_vec;
+
+//		vicontransform.block<3,3>(0,0)=matrix;
+		transformOld=vicontransform;
+
+		std::cout<<"vicontransform:"<<std::endl<<vicontransform<<std::endl;
+
+		take_vicon=false;
+		}
 	//	if(next_keyframe)
 	//	{
 	//		keyTrans=transformOld;
