@@ -235,9 +235,9 @@ void EXTRACT::RANSAC()
 //			Rotx.col(2)[1]=sin(M_PI/2);
 //			Rotx.col(2)[2]=cos(M_PI/2);
 //		Eigen::Matrix3f matrix(quat_vicon);
-			btQuaternion tmp_quat(quat_vicon.x(),quat_vicon.y(),quat_vicon.z(),quat_vicon.w());
-
-			btMatrix3x3 m(tmp_quat);
+//			btQuaternion tmp_quat(quat_vicon.x(),quat_vicon.y(),quat_vicon.z(),quat_vicon.w());
+//
+//			btMatrix3x3 m(tmp_quat);
 
 //			btMatrix3x3 m(q);
 //					std::cout<<"m:"<<m.getRow(0)[0]<<" "<<m.getRow(0)[1]<<" "<<m.getRow(0)[2]<<std::endl
@@ -246,6 +246,26 @@ void EXTRACT::RANSAC()
 //					double Roll, Pitch, Yaw;
 //					m.getRPY(Roll, Pitch, Yaw);
 
+
+				Eigen::Quaternion<float> quat_vicon_eigen;
+				quat_vicon_eigen.x()=quat_vicon.x();
+				quat_vicon_eigen.y()=quat_vicon.y();
+				quat_vicon_eigen.z()=quat_vicon.z();
+				quat_vicon_eigen.w()=quat_vicon.w();
+
+				Eigen::Quaternion<float> quat_tmp;
+				quat_tmp.w()=quat_rot.w();
+				quat_tmp.x()=-quat_rot.y();
+				quat_tmp.y()=-quat_rot.z();
+				quat_tmp.z()=quat_rot.x();
+
+
+				quat_tmp=quat_vicon_eigen*quat_tmp;
+
+
+				btQuaternion tmp_quat(quat_tmp.x(),quat_tmp.y(),quat_tmp.z(),quat_tmp.w());
+
+				btMatrix3x3 m(tmp_quat);
 
 
 
@@ -274,9 +294,9 @@ void EXTRACT::RANSAC()
 
 		vicontransform.block<3,1>(0,2)=tmp_vec;
 
-		tmp_vec[0]=pos_vicon[2];
-		tmp_vec[1]=pos_vicon[0];
-		tmp_vec[2]=pos_vicon[1];
+		tmp_vec[0]=-pos_vicon[1];
+		tmp_vec[1]=-pos_vicon[2];
+		tmp_vec[2]=pos_vicon[0];
 
 		vicontransform.block<3,1>(0,3)=tmp_vec;
 
@@ -330,14 +350,14 @@ void EXTRACT::publishEverything()
 	heliPose.header.frame_id="/pgraph";
 	heliPose.header.stamp=ros::Time::now();
 	heliPose.pose.position.x=trans_vec[2];
-	heliPose.pose.position.y=trans_vec[0];
-	heliPose.pose.position.z=trans_vec[1];
+	heliPose.pose.position.y=-trans_vec[0];
+	heliPose.pose.position.z=-trans_vec[1];
 
 	Eigen::Quaternion<float> quat_tmp;
 	quat_tmp.w()=quat_rot.w();
 	quat_tmp.x()=quat_rot.z();
-	quat_tmp.y()=quat_rot.y();
-	quat_tmp.z()=quat_rot.x();
+	quat_tmp.y()=-quat_rot.y();
+	quat_tmp.z()=-quat_rot.x();
 
 	quat_tmp=quat_imu*quat_tmp;
 
