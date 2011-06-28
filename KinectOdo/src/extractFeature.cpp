@@ -141,6 +141,10 @@ void EXTRACT::RANSAC()
 
 		previous_transformation=transformation_;
 		pcl::estimateRigidTransformationSVD(FeaturePointCloud[1],correspondences_source_good,FeaturePointCloud[0],correspondences_source_good,transformation_);
+
+		std::cout<<"transformation_"<<std::endl<<transformation_<<std::endl;
+		std::cout<<"KeyframeDataVector.at(actual_keyframe).Transformation"<<std::endl<<KeyframeDataVector.at(actual_keyframe).Transformation<<std::endl;
+		std::cout<<"actual keyframe"<<actual_keyframe<<std::endl;
 		//		if(transformation_at_least_twice_computed)
 		//		{
 		//			frametrans=keyTrans*transformation_*previous_transformation.inverse()*transformation_;
