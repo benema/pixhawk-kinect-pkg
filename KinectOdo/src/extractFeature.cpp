@@ -253,44 +253,38 @@ void EXTRACT::RANSAC()
 //				quat_vicon_eigen.z()=quat_vicon.z();
 //				quat_vicon_eigen.w()=quat_vicon.w();
 
-				Eigen::Quaternion<float> quat_tmp;
-				quat_tmp.w()=quat_vicon.w();
-				quat_tmp.x()=-quat_vicon.y();
-				quat_tmp.y()=-quat_vicon.z();
-				quat_tmp.z()=quat_vicon.x();
+
+				btQuaternion quat_tmp(-quat_vicon.y(),-quat_vicon.z(),quat_vicon.x(),quat_vicon.w());
 
 
 //				quat_tmp=quat_vicon_eigen*quat_tmp;
 
 
-				btQuaternion tmp_quat(quat_tmp.x(),quat_tmp.y(),quat_tmp.z(),quat_tmp.w());
 
-				btMatrix3x3 m(tmp_quat);
+				btMatrix3x3 m(quat_tmp);
 
 
 
 		Eigen::Matrix4f vicontransform=Eigen::Matrix4f::Identity();
-		float tmp;
-		tmp=m.getRow(0)[0];
 //		Eigen::Matrix4f vicontransform;
 
 		Eigen::Vector3f tmp_vec;
 
-		tmp_vec[0]=m.getRow(0)[0];
-		tmp_vec[1]=m.getRow(0)[1];
-		tmp_vec[2]=m.getRow(0)[2];
+		tmp_vec[0]=m.getColumn(0)[0];
+		tmp_vec[1]=m.getColumn(0)[1];
+		tmp_vec[2]=m.getColumn(0)[2];
 
 		vicontransform.block<3,1>(0,0)=tmp_vec;
 
-		tmp_vec[0]=m.getRow(1)[0];
-		tmp_vec[1]=m.getRow(1)[1];
-		tmp_vec[2]=m.getRow(1)[2];
+		tmp_vec[0]=m.getColumn(1)[0];
+		tmp_vec[1]=m.getColumn(1)[1];
+		tmp_vec[2]=m.getColumn(1)[2];
 
 		vicontransform.block<3,1>(0,1)=tmp_vec;
 
-		tmp_vec[0]=m.getRow(2)[0];
-		tmp_vec[1]=m.getRow(2)[1];
-		tmp_vec[2]=m.getRow(2)[2];
+		tmp_vec[0]=m.getColumn(2)[0];
+		tmp_vec[1]=m.getColumn(2)[1];
+		tmp_vec[2]=m.getColumn(2)[2];
 
 		vicontransform.block<3,1>(0,2)=tmp_vec;
 
