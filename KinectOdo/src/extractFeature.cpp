@@ -850,8 +850,9 @@ EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, i
 				FrameData[counter].KinectCloud=kinectCloud[counter];
 				if(counter==0)
 				{
-					FrameData[counter].Transformation=imuRot;//Eigen::Matrix4f::Identity();
-					notcopied=0;
+while(notcopied)
+	cvWaitKey(30);
+	FrameData[counter].Transformation=imuRot;//Eigen::Matrix4f::Identity();
 					KeyframeDataVector.push_back(FrameData[counter]);
 					PointCloud tmp;
 					tmp.header.frame_id="/pgraph";
@@ -988,6 +989,8 @@ EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, i
 
 					if(showTime)
 						start_time=clock();
+
+
 					if(next_keyframe)
 					{
 						swap();
@@ -1008,6 +1011,17 @@ EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, i
 					{
 						end_time=clock();
 						std::cout<<"time for swapping:\t"<<(float(end_time)-float(start_time))/CLOCKS_PER_SEC<<std::endl;
+					}
+					if(reset_map)
+					{
+						counter=0;
+						next_keyframe=false;
+						reset_map=false;
+						KeyframeDataVector.clear();
+						path.poses.clear();
+						notcopied=true;
+
+
 					}
 				}
 				if(showTime)
@@ -3131,6 +3145,8 @@ void EXTRACT::imuCallback (const sensor_msgs::Imu& imuMsg)
 	tmp_vec[2]=m.getColumn(2)[2];
 
 	imuRot.block<3,1>(0,2)=tmp_vec;
+
+	notcopied=false;
 
 
 
