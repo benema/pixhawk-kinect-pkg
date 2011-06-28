@@ -542,7 +542,7 @@ void EXTRACT::RANSACandTransformation()
 
 	//	if(showDisplay)
 	//	{
-	//		std::cout<<"correspondences_inliers.size()"<<correspondences_inliers.size()<<std::endl;
+			std::cout<<"correspondences_inliers.size() RANSACINLIERS"<<correspondences_inliers.size()<<std::endl;
 	//		for(uint i=0;i<correspondences_inliers.size();i++)
 	//		{
 	//			//				push_back_point.x=kinectCloud[0].at(kpts[0][matches_popcount[correspondences_matches[correspondences_inliers[i]]].queryIdx].pt.x,kpts[0][matches_popcount[correspondences_matches[correspondences_inliers[i]]].queryIdx].pt.y).x;
