@@ -358,7 +358,7 @@ void EXTRACT::publishEverything()
 	quat_tmp.y()=-quat_rot.y();
 	quat_tmp.z()=-quat_rot.x();
 
-	quat_tmp=quat_imu*quat_tmp;
+//	quat_tmp=quat_imu*quat_tmp;
 
 	heliPose.pose.orientation.w=quat_tmp.w();
 	heliPose.pose.orientation.x=quat_tmp.x();
