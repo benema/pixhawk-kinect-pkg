@@ -1020,6 +1020,30 @@ while(notcopied)
 						KeyframeDataVector.clear();
 						path.poses.clear();
 						notcopied=true;
+						callback_counter=0;
+						called=0;
+						actual_keyframe=0;
+							compute_counter=0;
+							computed=0;
+							transformation_at_least_once_computed=false;
+							transformation_at_least_twice_computed=false;
+							colored_pointcloud=false;
+
+
+							averageNumberOfCorrespondences=0;
+							averageTime=0;
+
+							countOfBadCorrespondences=0;
+
+							transformOld=Eigen::Matrix4f::Identity();
+							transformGes=Eigen::Matrix4f::Identity();
+							rot_matrix=Eigen::Matrix3f::Identity();
+							compute_transform_success=1;
+
+
+
+							called_first_time=true;
+
 
 
 					}
