@@ -247,11 +247,11 @@ void EXTRACT::RANSAC()
 //					m.getRPY(Roll, Pitch, Yaw);
 
 
-//				Eigen::Quaternion<float> quat_vicon_eigen;
-//				quat_vicon_eigen.x()=quat_vicon.x();
-//				quat_vicon_eigen.y()=quat_vicon.y();
-//				quat_vicon_eigen.z()=quat_vicon.z();
-//				quat_vicon_eigen.w()=quat_vicon.w();
+				Eigen::Quaternion<float> quat_vicon_eigen;
+				quat_vicon_eigen.x()=-quat_vicon.y();
+				quat_vicon_eigen.y()=-quat_vicon.z();
+				quat_vicon_eigen.z()=quat_vicon.x();
+				quat_vicon_eigen.w()=quat_vicon.w();
 
 
 				btQuaternion quat_tmp(-quat_vicon.y(),-quat_vicon.z(),quat_vicon.x(),quat_vicon.w());
@@ -262,6 +262,11 @@ void EXTRACT::RANSAC()
 
 
 				btMatrix3x3 m(quat_tmp);
+
+				std::cout<<"m vicon:"<<m.getRow(0)[0]<<" "<<m.getRow(0)[1]<<" "<<m.getRow(0)[2]<<std::endl
+				<<" "<<m.getRow(1)[0]<<" "<<m.getRow(1)[1]<<" "<<m.getRow(1)[2]<<std::endl
+				<<" "<<m.getRow(2)[0]<<" "<<m.getRow(2)[1]<<" "<<m.getRow(2)[2]<<std::endl;
+
 
 
 
