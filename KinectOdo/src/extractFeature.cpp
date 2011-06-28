@@ -1043,6 +1043,7 @@ while(notcopied)
 
 
 							called_first_time=true;
+							take_vicon=true;
 
 
 
