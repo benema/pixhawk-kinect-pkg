@@ -3106,7 +3106,7 @@ void EXTRACT::imuCallback (const sensor_msgs::Imu& imuMsg)
 	btMatrix3x3 m(q);
 	double Roll, Pitch, Yaw;
 	m.getRPY(Roll, Pitch, Yaw);
-	m.setRPY(Roll,Pitch,0);
+//	m.setRPY(Roll,Pitch,0);
 
 
 
@@ -3154,13 +3154,15 @@ void EXTRACT::imuCallback (const sensor_msgs::Imu& imuMsg)
 ////	std::cout<<"rollpitch\n"<<RotYPitch<<std::endl;
 //
 //
-//	Eigen::Matrix4f RotZYaw=Eigen::Matrix4f::Identity();
-//
-//	RotZYaw.col(0)[0]=cos(Yaw);
-//	RotZYaw.col(0)[1]=-sin(Yaw);
-//	RotZYaw.col(1)[0]=sin(Yaw);
-//	RotZYaw.col(1)[1]=cos(Yaw);
-//	std::cout<<"rollyaw\n"<<RotZYaw<<std::endl;
+	Eigen::Matrix4f RotZYaw=Eigen::Matrix4f::Identity();
+
+	RotZYaw.col(0)[0]=cos(-Yaw);
+	RotZYaw.col(0)[1]=sin(-Yaw);
+	RotZYaw.col(1)[0]=-sin(-Yaw);
+	RotZYaw.col(1)[1]=cos(-Yaw);
+	std::cout<<"rollyaw\n"<<RotZYaw<<std::endl;
+
+	imuRot=RotZYaw*imuRot;
 //
 //
 //
