@@ -3106,7 +3106,7 @@ void EXTRACT::imuCallback (const sensor_msgs::Imu& imuMsg)
 	btMatrix3x3 m(q);
 	double Roll, Pitch, Yaw;
 	m.getRPY(Roll, Pitch, Yaw);
-	m.setRPY(-pitch,0,Roll);
+	m.setRPY(-Pitch,0,Roll);
 
 	Eigen::Vector3f tmp_vec;
 
