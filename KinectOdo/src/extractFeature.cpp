@@ -351,7 +351,10 @@ void EXTRACT::publishEverything()
 	heliPose.pose.position.x=trans_vec[2];
 	heliPose.pose.position.y=trans_vec[0];
 	if(take_vicon_z)
+	{
 		heliPose.pose.position.z=pos_vicon[2];
+		std::cout<<"taking vicon z"<<std::endl;
+	}
 	else
 		heliPose.pose.position.z=trans_vec[1];
 
