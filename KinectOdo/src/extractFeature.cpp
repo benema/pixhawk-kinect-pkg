@@ -3099,7 +3099,7 @@ void EXTRACT::commandCallback (const lcm_mavlink_ros::COMMAND& commandMsg)
 	std::cout<<"commandmsg.command:"<<commandMsg.command<<std::endl;
 	if(commandMsg.command==200)
 		take_vicon=true;
-	if(commandMsg.command==201)
+	if(commandMsg.command==241)
 		reset_map=true;
 }
 
