@@ -850,7 +850,7 @@ EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, i
 				FrameData[counter].KinectCloud=kinectCloud[counter];
 				if(counter==0)
 				{
-					FrameData[counter].Transformation=Eigen::Matrix4f::Identity();//imuRot
+					FrameData[counter].Transformation=imuRot;//Eigen::Matrix4f::Identity();
 					notcopied=0;
 					KeyframeDataVector.push_back(FrameData[counter]);
 					PointCloud tmp;
@@ -3101,7 +3101,7 @@ void EXTRACT::imuCallback (const sensor_msgs::Imu& imuMsg)
 		quat_imu.z()=imuMsg.orientation.z;
 		quat_imu.w()=imuMsg.orientation.w;
 
-	btQuaternion q(imuMsg.orientation.x, imuMsg.orientation.y, imuMsg.orientation.z, imuMsg.orientation.w);
+	btQuaternion q(-imuMsg.orientation.y, -imuMsg.orientation.z,imuMsg.orientation.x,  imuMsg.orientation.w);
 	btMatrix3x3 m(q);
 	double Roll, Pitch, Yaw;
 	m.getRPY(Roll, Pitch, Yaw);
@@ -3116,7 +3116,7 @@ void EXTRACT::imuCallback (const sensor_msgs::Imu& imuMsg)
 	RotXRoll.col(2)[1]=sin(-Roll);
 	RotXRoll.col(2)[2]=cos(-Roll);
 
-	std::cout<<"rollxroll\n"<<RotXRoll<<std::endl;
+//	std::cout<<"rollxroll\n"<<RotXRoll<<std::endl;
 
 	Eigen::Matrix4f RotYPitch=Eigen::Matrix4f::Identity();
 
@@ -3124,7 +3124,7 @@ void EXTRACT::imuCallback (const sensor_msgs::Imu& imuMsg)
 	RotYPitch.col(0)[2]=sin(-Pitch);
 	RotYPitch.col(2)[0]=-sin(-Pitch);
 	RotYPitch.col(2)[2]=cos(-Pitch);
-	std::cout<<"rollpitch\n"<<RotYPitch<<std::endl;
+//	std::cout<<"rollpitch\n"<<RotYPitch<<std::endl;
 
 
 	Eigen::Matrix4f RotZYaw=Eigen::Matrix4f::Identity();
@@ -3133,16 +3133,16 @@ void EXTRACT::imuCallback (const sensor_msgs::Imu& imuMsg)
 	RotZYaw.col(0)[1]=-sin(Yaw);
 	RotZYaw.col(1)[0]=sin(Yaw);
 	RotZYaw.col(1)[1]=cos(Yaw);
-	std::cout<<"rollyaw\n"<<RotZYaw<<std::endl;
-
-
-
-	Eigen::Matrix4f Rotz=Eigen::Matrix4f::Identity();
-
-	Rotz.col(0)[0]=cos(M_PI/2);
-	Rotz.col(0)[1]=-sin(M_PI/2);
-	Rotz.col(1)[0]=sin(M_PI/2);
-	Rotz.col(1)[1]=cos(M_PI/2);
+//	std::cout<<"rollyaw\n"<<RotZYaw<<std::endl;
+//
+//
+//
+//	Eigen::Matrix4f Rotz=Eigen::Matrix4f::Identity();
+//
+//	Rotz.col(0)[0]=cos(M_PI/2);
+//	Rotz.col(0)[1]=-sin(M_PI/2);
+//	Rotz.col(1)[0]=sin(M_PI/2);
+//	Rotz.col(1)[1]=cos(M_PI/2);
 
 //	Eigen::Matrix4f Roty=Eigen::Matrix4f::Identity();
 //
@@ -3151,11 +3151,11 @@ void EXTRACT::imuCallback (const sensor_msgs::Imu& imuMsg)
 //	Roty.col(2)[0]=-sin(-M_PI/2);
 //	Roty.col(2)[2]=cos(-M_PI/2);
 
-	Eigen::Matrix4f Rotx=Eigen::Matrix4f::Identity();
-	Rotx.col(1)[1]=cos(M_PI/2);
-	Rotx.col(1)[2]=-sin(M_PI/2);
-	Rotx.col(2)[1]=sin(M_PI/2);
-	Rotx.col(2)[2]=cos(M_PI/2);
+//	Eigen::Matrix4f Rotx=Eigen::Matrix4f::Identity();
+//	Rotx.col(1)[1]=cos(M_PI/2);
+//	Rotx.col(1)[2]=-sin(M_PI/2);
+//	Rotx.col(2)[1]=sin(M_PI/2);
+//	Rotx.col(2)[2]=cos(M_PI/2);
 
 
 
@@ -3172,7 +3172,7 @@ void EXTRACT::imuCallback (const sensor_msgs::Imu& imuMsg)
 //	double Raw2, Pitch2, Yaw2;
 //	m2.getRPY(Raw2, Pitch2, Yaw2);
 	//1st
-	imuRot=Rotz*Rotx*RotXRoll*RotYPitch*RotZYaw;//Rotz*Rotx*RotXRoll*RotYPitch*RotZYaw;//Eigen::Matrix4f::Identity();
+	imuRot=RotXRoll*RotYPitch*RotZYaw;//Rotz*Rotx*RotXRoll*RotYPitch*RotZYaw;//Eigen::Matrix4f::Identity();
 	std::cout<<"imurot"<<std::endl<<imuRot<<std::endl;
 //	imuRot=Eigen::Matrix4f::Identity();
 //	imuRot.col(0)[0]=(float)cos(Pitch);
