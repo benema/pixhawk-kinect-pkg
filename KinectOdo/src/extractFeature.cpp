@@ -861,7 +861,7 @@ EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, i
 				{
 while(notcopied)
 	cvWaitKey(30);
-	FrameData[counter].Transformation=imuRot;//Eigen::Matrix4f::Identity();
+	FrameData[counter].Transformation=Eigen::Matrix4f::Identity();//imuRot;
 					KeyframeDataVector.push_back(FrameData[counter]);
 					PointCloud tmp;
 					tmp.header.frame_id="/pgraph";
