@@ -286,6 +286,8 @@ private:
     Eigen::Vector3f pos_vicon;
 
     bool take_vicon;
+    bool take_initial_vicon;
+    Eigen::Matrix4f vicontransform;
     bool reset_map;
     Eigen::Quaternion<float> quat_rot_heli;
     Eigen::Quaternion<float> quat_rot_keyframe;

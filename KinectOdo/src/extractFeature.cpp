@@ -140,6 +140,7 @@ void EXTRACT::RANSAC()
 		transformation_at_least_once_computed=true;
 
 		previous_transformation=transformation_;
+
 		pcl::estimateRigidTransformationSVD(FeaturePointCloud[1],correspondences_source_good,FeaturePointCloud[0],correspondences_source_good,transformation_);
 
 		std::cout<<"transformation_"<<std::endl<<transformation_<<std::endl;
@@ -274,7 +275,7 @@ void EXTRACT::RANSAC()
 
 
 
-		Eigen::Matrix4f vicontransform=Eigen::Matrix4f::Identity();
+		vicontransform=Eigen::Matrix4f::Identity();
 //		Eigen::Matrix4f vicontransform;
 
 		Eigen::Vector3f tmp_vec;
@@ -592,6 +593,7 @@ void EXTRACT::matchFeature(cv::Mat &dtors0,cv::Mat&dtors1,	vector<cv::DMatch> &m
 EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, int keyframe_inliers, bool time, bool slam,int ignored, int near_keyframe_inliers, int swaps)
 {
 	take_vicon_z=swaps;
+	take_initial_vicon=false;
 	take_vicon=false;
 	reset_map=false;
 
@@ -863,9 +865,16 @@ EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, i
 				FrameData[counter].KinectCloud=kinectCloud[counter];
 				if(counter==0)
 				{
-while(notcopied)
-	cvWaitKey(30);
-	FrameData[counter].Transformation=Eigen::Matrix4f::Identity();//imuRot;
+					if(take_initial_vicon)
+					{
+						FrameData[counter].Transformation=vicontransform;//imuRot;
+					}
+					else
+					{
+						while(notcopied)
+							cvWaitKey(30);
+						FrameData[counter].Transformation=Eigen::Matrix4f::Identity();//imuRot;
+					}
 					KeyframeDataVector.push_back(FrameData[counter]);
 					PointCloud tmp;
 					tmp.header.frame_id="/pgraph";
@@ -1057,6 +1066,8 @@ while(notcopied)
 
 							called_first_time=true;
 							take_vicon=true;
+
+							take_initial_vicon=true;
 
 
 
