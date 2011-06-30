@@ -19,6 +19,8 @@ static CvScalar colors[] =
 void EXTRACT::RANSAC()
 {
 
+	std::cout<<"inransac"<<std::endl;
+
 
 	Eigen::Matrix4f frametrans=Eigen::Matrix4f::Identity();
 	correspondences_source_good.clear();
@@ -51,8 +53,10 @@ void EXTRACT::RANSAC()
 	// Pass the target_indices
 
 
+	std::cout<<"befor featurecloud0"<<std::endl;
 	model->setInputTarget (FeaturePointCloud[0].makeShared(), correspondences);
 	// Create a RANSAC model
+	std::cout<<"after featurecloud0"<<std::endl;
 
 	pcl::RandomSampleConsensus<Point> sac (model, ransac_acc);
 	sac.setMaxIterations (ransac_it);
@@ -868,11 +872,14 @@ EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, i
 					if(take_initial_vicon)
 					{
 						FrameData[counter].Transformation=vicontransform;//imuRot;
+						std::cout<<"copying 0 if"<<std::endl;
+
 					}
 					else
 					{
 						while(notcopied)
 							cvWaitKey(30);
+						std::cout<<"copying 0 esle"<<std::endl;
 						FrameData[counter].Transformation=Eigen::Matrix4f::Identity();//imuRot;
 					}
 					KeyframeDataVector.push_back(FrameData[counter]);
