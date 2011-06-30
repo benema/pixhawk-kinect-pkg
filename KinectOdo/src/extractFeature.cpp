@@ -759,6 +759,45 @@ EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, i
 
 		if(called==1)
 		{
+			if(reset_map)
+					{
+						counter=0;
+						next_keyframe=false;
+						reset_map=false;
+						KeyframeDataVector.clear();
+						path.poses.clear();
+						notcopied=true;
+						callback_counter=0;
+						called=0;
+						actual_keyframe=0;
+						compute_counter=0;
+						computed=0;
+						transformation_at_least_once_computed=false;
+						transformation_at_least_twice_computed=false;
+						colored_pointcloud=false;
+
+
+						averageNumberOfCorrespondences=0;
+						averageTime=0;
+
+						countOfBadCorrespondences=0;
+
+						transformOld=vicontransform;
+
+
+						compute_transform_success=1;
+
+
+
+						called_first_time=true;
+						take_vicon=true;
+
+						take_initial_vicon=true;
+
+
+
+					}
+			else{
 			//			ros::spinOnce();
 
 			if(showTime)
@@ -1051,44 +1090,8 @@ EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, i
 			}
 			//ROS_INFO("waiting for next image... bad corresp. until now:%d",countOfBadCorrespondences);
 		}
-		if(reset_map)
-		{
-			counter=0;
-			next_keyframe=false;
-			reset_map=false;
-			KeyframeDataVector.clear();
-			path.poses.clear();
-			notcopied=true;
-			callback_counter=0;
-			called=0;
-			actual_keyframe=0;
-			compute_counter=0;
-			computed=0;
-			transformation_at_least_once_computed=false;
-			transformation_at_least_twice_computed=false;
-			colored_pointcloud=false;
-
-
-			averageNumberOfCorrespondences=0;
-			averageTime=0;
-
-			countOfBadCorrespondences=0;
-
-			transformOld=vicontransform;
-
-
-			compute_transform_success=1;
-
-
-
-			called_first_time=true;
-			take_vicon=true;
-
-			take_initial_vicon=true;
-
-
-
 		}
+
 	}
 
 	spinner.stop();
