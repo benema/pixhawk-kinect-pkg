@@ -768,7 +768,7 @@ EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, i
 						path.poses.clear();
 						notcopied=true;
 						callback_counter=0;
-						called=0;
+//						called=0;
 						actual_keyframe=0;
 						compute_counter=0;
 						computed=0;
@@ -811,6 +811,8 @@ EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, i
 				counter=0;
 			else
 				counter=1;
+
+			std::cout<<"counter:"<<counter<<std::endl;
 
 			//			std::cout<<"counter and calledfirst"<<counter<<",<"<<called_first_time<<std::endl;
 			cvCopy(callback_image,cv_image[counter]);
