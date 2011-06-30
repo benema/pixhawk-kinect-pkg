@@ -908,10 +908,13 @@ EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, i
 				FrameData[counter].Descriptor=dtors[counter];
 				FrameData[counter].Keypoints=kpts[counter];
 				FrameData[counter].KinectCloud=kinectCloud[counter];
+				std::cout<<"counter:"<<counter<<std::endl;
+				std::cout<<"take_initial_vicon:"<<take_initial_vicon<<std::endl;
 				if(counter==0)
 				{
 					if(take_initial_vicon)
 					{
+						std::cout<<"vicontransform"<<vicontransform<<std::endl;
 						FrameData[counter].Transformation=vicontransform;//imuRot;
 						std::cout<<"copying 0 if"<<std::endl;
 
@@ -920,6 +923,8 @@ EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, i
 					{
 //						while(notcopied)
 //							cvWaitKey(30);
+						std::cout<<"vicontransform"<<vicontransform<<std::endl;
+
 						std::cout<<"copying 0 esle"<<std::endl;
 						FrameData[counter].Transformation=vicontransform;//;Eigen::Matrix4f::Identity();//imuRot;
 					}
