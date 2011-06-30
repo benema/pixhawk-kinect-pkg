@@ -224,89 +224,6 @@ void EXTRACT::RANSAC()
 	if(take_vicon)
 	{
 		next_keyframe=true;
-		//			Eigen::Matrix4f Rotz=Eigen::Matrix4f::Identity();
-		//
-		//			Rotz.col(0)[0]=cos(M_PI/2);
-		//			Rotz.col(0)[1]=-sin(M_PI/2);
-		//			Rotz.col(1)[0]=sin(M_PI/2);
-		//			Rotz.col(1)[1]=cos(M_PI/2);
-		//
-		//		//	Eigen::Matrix4f Roty=Eigen::Matrix4f::Identity();
-		//		//
-		//		//	Roty.col(0)[0]=cos(-M_PI/2);
-		//		//	Roty.col(0)[2]=sin(-M_PI/2);
-		//		//	Roty.col(2)[0]=-sin(-M_PI/2);
-		//		//	Roty.col(2)[2]=cos(-M_PI/2);
-		//
-		//			Eigen::Matrix4f Rotx=Eigen::Matrix4f::Identity();
-		//			Rotx.col(1)[1]=cos(M_PI/2);
-		//			Rotx.col(1)[2]=-sin(M_PI/2);
-		//			Rotx.col(2)[1]=sin(M_PI/2);
-		//			Rotx.col(2)[2]=cos(M_PI/2);
-		//		Eigen::Matrix3f matrix(quat_vicon);
-		//			btQuaternion tmp_quat(quat_vicon.x(),quat_vicon.y(),quat_vicon.z(),quat_vicon.w());
-		//
-		//			btMatrix3x3 m(tmp_quat);
-
-		//			btMatrix3x3 m(q);
-		//					std::cout<<"m:"<<m.getRow(0)[0]<<" "<<m.getRow(0)[1]<<" "<<m.getRow(0)[2]<<std::endl
-		//							<<" "<<m.getRow(1)[0]<<" "<<m.getRow(1)[1]<<" "<<m.getRow(1)[2]<<std::endl
-		//							<<" "<<m.getRow(2)[0]<<" "<<m.getRow(2)[1]<<" "<<m.getRow(2)[2]<<std::endl;
-		//					double Roll, Pitch, Yaw;
-		//					m.getRPY(Roll, Pitch, Yaw);
-
-
-		Eigen::Quaternion<float> quat_vicon_eigen;
-		quat_vicon_eigen.x()=-quat_vicon.y();
-		quat_vicon_eigen.y()=-quat_vicon.z();
-		quat_vicon_eigen.z()=quat_vicon.x();
-		quat_vicon_eigen.w()=quat_vicon.w();
-
-
-		btQuaternion quat_tmp(quat_vicon.y(),quat_vicon.z(),quat_vicon.x(),quat_vicon.w());
-
-
-		//				quat_tmp=quat_vicon_eigen*quat_tmp;
-
-
-
-		btMatrix3x3 m(quat_tmp);
-
-		std::cout<<"m vicon:"<<m.getRow(0)[0]<<" "<<m.getRow(0)[1]<<" "<<m.getRow(0)[2]<<std::endl
-				<<" "<<m.getRow(1)[0]<<" "<<m.getRow(1)[1]<<" "<<m.getRow(1)[2]<<std::endl
-				<<" "<<m.getRow(2)[0]<<" "<<m.getRow(2)[1]<<" "<<m.getRow(2)[2]<<std::endl;
-
-
-
-
-		vicontransform=Eigen::Matrix4f::Identity();
-		//		Eigen::Matrix4f vicontransform;
-
-		Eigen::Vector3f tmp_vec;
-
-		tmp_vec[0]=m.getColumn(0)[0];
-		tmp_vec[1]=m.getColumn(0)[1];
-		tmp_vec[2]=m.getColumn(0)[2];
-
-		vicontransform.block<3,1>(0,0)=tmp_vec;
-
-		tmp_vec[0]=m.getColumn(1)[0];
-		tmp_vec[1]=m.getColumn(1)[1];
-		tmp_vec[2]=m.getColumn(1)[2];
-
-		vicontransform.block<3,1>(0,1)=tmp_vec;
-
-		tmp_vec[0]=m.getColumn(2)[0];
-		tmp_vec[1]=m.getColumn(2)[1];
-		tmp_vec[2]=m.getColumn(2)[2];
-
-		vicontransform.block<3,1>(0,2)=tmp_vec;
-
-		tmp_vec[0]=pos_vicon[1];
-		tmp_vec[1]=pos_vicon[2];
-		tmp_vec[2]=pos_vicon[0];
-
-		vicontransform.block<3,1>(0,3)=tmp_vec;
 
 		//		vicontransform.block<3,3>(0,0)=matrix;
 		transformOld=vicontransform;
@@ -761,6 +678,8 @@ EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, i
 		{
 			if(reset_map)
 					{
+
+						std::cout<<"resetting map!!!"<<std::endl;
 						counter=0;
 						next_keyframe=false;
 						reset_map=false;
@@ -3155,6 +3074,90 @@ void EXTRACT::viconCallback (const geometry_msgs::PoseStamped& viconMsg)
 	pos_vicon[0]=viconMsg.pose.position.x;
 	pos_vicon[1]=viconMsg.pose.position.y;
 	pos_vicon[2]=viconMsg.pose.position.z;
+
+	//			Eigen::Matrix4f Rotz=Eigen::Matrix4f::Identity();
+	//
+	//			Rotz.col(0)[0]=cos(M_PI/2);
+	//			Rotz.col(0)[1]=-sin(M_PI/2);
+	//			Rotz.col(1)[0]=sin(M_PI/2);
+	//			Rotz.col(1)[1]=cos(M_PI/2);
+	//
+	//		//	Eigen::Matrix4f Roty=Eigen::Matrix4f::Identity();
+	//		//
+	//		//	Roty.col(0)[0]=cos(-M_PI/2);
+	//		//	Roty.col(0)[2]=sin(-M_PI/2);
+	//		//	Roty.col(2)[0]=-sin(-M_PI/2);
+	//		//	Roty.col(2)[2]=cos(-M_PI/2);
+	//
+	//			Eigen::Matrix4f Rotx=Eigen::Matrix4f::Identity();
+	//			Rotx.col(1)[1]=cos(M_PI/2);
+	//			Rotx.col(1)[2]=-sin(M_PI/2);
+	//			Rotx.col(2)[1]=sin(M_PI/2);
+	//			Rotx.col(2)[2]=cos(M_PI/2);
+	//		Eigen::Matrix3f matrix(quat_vicon);
+	//			btQuaternion tmp_quat(quat_vicon.x(),quat_vicon.y(),quat_vicon.z(),quat_vicon.w());
+	//
+	//			btMatrix3x3 m(tmp_quat);
+
+	//			btMatrix3x3 m(q);
+	//					std::cout<<"m:"<<m.getRow(0)[0]<<" "<<m.getRow(0)[1]<<" "<<m.getRow(0)[2]<<std::endl
+	//							<<" "<<m.getRow(1)[0]<<" "<<m.getRow(1)[1]<<" "<<m.getRow(1)[2]<<std::endl
+	//							<<" "<<m.getRow(2)[0]<<" "<<m.getRow(2)[1]<<" "<<m.getRow(2)[2]<<std::endl;
+	//					double Roll, Pitch, Yaw;
+	//					m.getRPY(Roll, Pitch, Yaw);
+
+
+	Eigen::Quaternion<float> quat_vicon_eigen;
+	quat_vicon_eigen.x()=-quat_vicon.y();
+	quat_vicon_eigen.y()=-quat_vicon.z();
+	quat_vicon_eigen.z()=quat_vicon.x();
+	quat_vicon_eigen.w()=quat_vicon.w();
+
+
+	btQuaternion quat_tmp(quat_vicon.y(),quat_vicon.z(),quat_vicon.x(),quat_vicon.w());
+
+
+	//				quat_tmp=quat_vicon_eigen*quat_tmp;
+
+
+
+	btMatrix3x3 m(quat_tmp);
+
+	std::cout<<"m vicon:"<<m.getRow(0)[0]<<" "<<m.getRow(0)[1]<<" "<<m.getRow(0)[2]<<std::endl
+			<<" "<<m.getRow(1)[0]<<" "<<m.getRow(1)[1]<<" "<<m.getRow(1)[2]<<std::endl
+			<<" "<<m.getRow(2)[0]<<" "<<m.getRow(2)[1]<<" "<<m.getRow(2)[2]<<std::endl;
+
+
+
+
+	vicontransform=Eigen::Matrix4f::Identity();
+	//		Eigen::Matrix4f vicontransform;
+
+	Eigen::Vector3f tmp_vec;
+
+	tmp_vec[0]=m.getColumn(0)[0];
+	tmp_vec[1]=m.getColumn(0)[1];
+	tmp_vec[2]=m.getColumn(0)[2];
+
+	vicontransform.block<3,1>(0,0)=tmp_vec;
+
+	tmp_vec[0]=m.getColumn(1)[0];
+	tmp_vec[1]=m.getColumn(1)[1];
+	tmp_vec[2]=m.getColumn(1)[2];
+
+	vicontransform.block<3,1>(0,1)=tmp_vec;
+
+	tmp_vec[0]=m.getColumn(2)[0];
+	tmp_vec[1]=m.getColumn(2)[1];
+	tmp_vec[2]=m.getColumn(2)[2];
+
+	vicontransform.block<3,1>(0,2)=tmp_vec;
+
+	tmp_vec[0]=pos_vicon[1];
+	tmp_vec[1]=pos_vicon[2];
+	tmp_vec[2]=pos_vicon[0];
+
+	vicontransform.block<3,1>(0,3)=tmp_vec;
 
 
 
