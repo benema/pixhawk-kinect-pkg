@@ -22,11 +22,13 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #rosbuild_gensrv()
 
 #common commands for building c++ executables and libraries
-#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
+#rosbuild_add_library(KinectOdo /home/benema/ros_tutorials/Kinect-Pixhawk/pixhawk-kinect-pkg/toro/trunk/treeoptimizer3.cpp)
+#rosbuild_add_library(KinectOdo /home/benema/ros_tutorials/Kinect-Pixhawk/pixhawk-kinect-pkg/toro/trunk/posegraph3.cpp)
+
 #target_link_libraries(${PROJECT_NAME} another_library)
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 #rosbuild_add_executable(example examples/example.cpp)
-#target_link_libraries(example ${PROJECT_NAME})
+#target_link_libraries(KinectOdo TORO)
 
-rosbuild_add_executable(KinectOdo src/main.cpp src/extractFeature.h src/extractFeature.cpp)
+rosbuild_add_executable(KinectOdo src/main.cpp src/extractFeature.h src/extractFeature.cpp ../toro/trunk/treeoptimizer3.cpp ../toro/trunk/posegraph3.cpp ../toro/trunk/treeoptimizer3_iteration.cpp)

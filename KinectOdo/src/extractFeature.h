@@ -91,6 +91,16 @@ $ rosservice call path 1 3
 //#include "/home/benema/ros_tutorials/Kinect-Pixhawk/mavlink-ros-pkg/lcm_mavlink_ros/msg_gen/cpp/include/lcm_mavlink_ros/COMMAND.h"
 #include "../../../mavlink-ros-pkg/lcm_mavlink_ros/msg_gen/cpp/include/lcm_mavlink_ros/COMMAND.h"
 
+//TORO
+//#include "../../toro/trunk/treeoptimizer2.hh"
+#include "../../toro/trunk/treeoptimizer3.hh"
+//#include "../../toro/trunk/posegraph.hh"
+//#include "../../toro/trunk/posegraph2.hh"
+#include "../../toro/trunk/posegraph3.hh"
+//#include "../../toro/trunk/transformation2.hh"
+//#include "../../toro/trunk/transformation3.hh"
+//#include "../../toro/trunk/dmatrix.hh"
+
 
 //sba stuff
 //SBA
@@ -105,6 +115,8 @@ typedef pcl::PointXYZ Point;
 #define depth_topic "/camera/depth/points"
 //SBA
 //#define STORE_POINTS_IN_SBA sys.addPoint(temppoint);
+
+
 
 
 //typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloud;
@@ -200,6 +212,7 @@ private:
 	bool doSLAM;
 	bool called_first_time;
 	bool take_vicon_z;
+	bool pushed_already;
 	int q;
 	int numberOfIgnoredKeyframes;
 	bool showDisplay;
@@ -361,6 +374,8 @@ private:
 		cv::Mat Descriptor;
 		std::vector<cv::KeyPoint> Keypoints;
 		PointCloud KinectCloud;
+		vector<int> edges_to;
+		vector<Eigen::Matrix4f> Transformation_to;
 		vector<cv::DMatch> matches_backward;
 		vector<int> correspondences_backward;
 
@@ -391,6 +406,8 @@ private:
 
 	void swap();
 	void findNearestKeyframetoLastandComputeTransformation(struct FrameData& Last);
+	void refineMapWithTORO(std::vector<struct FrameData>* map);
+
 
 	void createCorrespondingPointcloud(struct FrameData& Data0,PointCloud& Cloud0,struct FrameData& Data1,PointCloud& Cloud1,std::vector<int>& correspondvector,vector<cv::DMatch>& matches);
 	void createCorrespondingPointcloud(struct FrameData& Data0,PointCloud& Cloud0,struct FrameData& Data1,PointCloud& Cloud1,std::vector<int>& correspondvector,vector<cv::DMatch>& matches,bool show,std::vector<cv::KeyPoint>& kpts0,std::vector<cv::KeyPoint>& kpts1);

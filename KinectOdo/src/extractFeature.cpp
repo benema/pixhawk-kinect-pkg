@@ -1,4 +1,5 @@
 #include "extractFeature.h"
+using namespace AISNavigation;
 
 static CvScalar colors[] =
 {
@@ -166,6 +167,7 @@ void EXTRACT::RANSAC()
 
 
 
+
 		//				Eigen::Matrix4f Rotz=Eigen::Matrix4f::Identity();
 		//
 		//				Rotz.col(0)[0]=cos(M_PI/2);
@@ -240,6 +242,12 @@ void EXTRACT::RANSAC()
 
 	std::cout<<"transformold"<<std::endl<<transformOld<<std::endl;
 	correspondences_inliers=correspondences_source_good;
+
+	if(next_keyframe)
+	{
+		FrameData[counter].edges_to.push_back(actual_keyframe);
+		FrameData[counter].Transformation_to.push_back(transformation_);
+	}
 
 }
 
@@ -384,7 +392,8 @@ void EXTRACT::RANSACandTransformation()
 
 	time_t start_nearest=clock();
 	//	if(actual_keyframe==(KeyframeDataVector.size()-1))
-	findNearestKeyframetoLastandComputeTransformation(FrameData[counter]);
+	if(next_keyframe)
+		findNearestKeyframetoLastandComputeTransformation(FrameData[counter]);
 	//	else
 	//		findNearestKeyframetoLastandComputeTransformation(FrameData[1]);
 
@@ -513,10 +522,12 @@ void EXTRACT::matchFeature(cv::Mat &dtors0,cv::Mat&dtors1,	vector<cv::DMatch> &m
 
 EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, int keyframe_inliers, bool time, bool slam,int ignored, int near_keyframe_inliers, int swaps)
 {
-	take_vicon_z=swaps;
+	vicontransform=Eigen::Matrix4f::Identity();
+	take_vicon_z=0;
 	take_initial_vicon=false;
 	take_vicon=false;
 	reset_map=false;
+	pushed_already=false;
 
 	notcopied=1;
 
@@ -574,8 +585,7 @@ EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, i
 	callback_image=cvCreateImage(cvSize(640,480),8,3);
 
 	doICP=false;
-	pFile = fopen ("myfile.txt","w");
-	fprintf (pFile, "Good Correspondences, x,y,z,rotx,roty,rotz,rotw\n");
+	pFile = fopen ("3dDATA.graph","w");
 
 
 	averageNumberOfCorrespondences=0;
@@ -677,345 +687,345 @@ EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, i
 		if(called==1)
 		{
 			if(reset_map)
-					{
-
-						std::cout<<"resetting map!!!"<<std::endl;
-						counter=0;
-						next_keyframe=false;
-						reset_map=false;
-						KeyframeDataVector.clear();
-						path.poses.clear();
-						notcopied=true;
-						callback_counter=0;
-//						called=0;
-						actual_keyframe=0;
-						compute_counter=0;
-						computed=0;
-						transformation_at_least_once_computed=false;
-						transformation_at_least_twice_computed=false;
-						colored_pointcloud=false;
-
-
-						averageNumberOfCorrespondences=0;
-						averageTime=0;
-
-						countOfBadCorrespondences=0;
-
-						transformOld=vicontransform;
-
-
-						compute_transform_success=1;
-
-
-
-						called_first_time=true;
-						take_vicon=true;
-
-						take_initial_vicon=true;
-
-
-
-					}
-			else{
-			//			ros::spinOnce();
-
-			if(showTime)
 			{
-				start = clock();
-				std::cout<<"untill callback called again \t:"<< double((double(start)-double(finish))/CLOCKS_PER_SEC)<<std::endl;
-			}
-			if(showTime)
-				start_time2=clock();
-			if(called_first_time)
+
+				std::cout<<"resetting map!!!"<<std::endl;
 				counter=0;
-			else
-				counter=1;
+				next_keyframe=false;
+				reset_map=false;
+				KeyframeDataVector.clear();
+				path.poses.clear();
+				notcopied=true;
+				callback_counter=0;
+				//						called=0;
+				actual_keyframe=0;
+				compute_counter=0;
+				computed=0;
+				transformation_at_least_once_computed=false;
+				transformation_at_least_twice_computed=false;
+				colored_pointcloud=false;
 
-			std::cout<<"counter:"<<counter<<std::endl;
 
-			//			std::cout<<"counter and calledfirst"<<counter<<",<"<<called_first_time<<std::endl;
-			cvCopy(callback_image,cv_image[counter]);
-			kinectCloud[counter]=callbackCloud;
-			kinectCloud[counter].header.frame_id="/pgraph";
-			called=0;
+				averageNumberOfCorrespondences=0;
+				averageTime=0;
 
-			if(showTime)
-				time_t start_time=clock();
+				countOfBadCorrespondences=0;
 
-			{
-				//		        if( m.refcount )
-				//		            CV_XADD(m.refcount, 1);
-				//		        release();
-				//		        flags = m.flags;
-				//		        if( dims <= 2 && m.dims <= 2 )
-				//		        {
-				//		            dims = m.dims;
-				//		            rows = m.rows;
-				//		            cols = m.cols;
-				//		            step[0] = m.step[0];
-				//		            step[1] = m.step[1];
-				//		        }
-				//		        else
-				//		            copySize(m);
-				//		        data = m.data;
-				//		        datastart = m.datastart;
-				//		        dataend = m.dataend;
-				//		        datalimit = m.datalimit;
-				//		        refcount = m.refcount;
-				//		        allocator = m.allocator;
+				transformOld=vicontransform;
 
-				PointCloud tmpCloud;
-				tmpCloud.header.frame_id="/pgraph";
-				std::vector<cv::KeyPoint> kpts_tmp;
+
+				compute_transform_success=1;
 
 
 
-				Point tmpPoint;
+				called_first_time=true;
+				take_vicon=true;
 
-				cv::Mat dtorstmp;
-				detector->detect(cv_image[counter],kpts[counter]);
-				extractor->compute(cv_image[counter],kpts[counter],dtors[counter]);
-				dtorstmp.flags=dtors[counter].flags;
-				dtorstmp.dims=dtors[counter].dims;
-				dtorstmp.cols=dtors[counter].cols;
-				dtorstmp.step[0]=dtors[counter].step[0];
-				dtorstmp.step[1]=dtors[counter].step[1];
-				//				if( dtorstmp.refcount )
-				//				            CV_XADD(detorstmp.refcount, 1);
-				//				        flags = m.flags;
-				//				        if( dims <= 2 && m.dims <= 2 )
-				//				        {
-				//				            dims = m.dims;
-				//				            rows = m.rows;
-				//				            cols = m.cols;
-				//				            step[0] = m.step[0];
-				//				            step[1] = m.step[1]
-				//				//				std::cout<<"testsize: kpts[counter]: "<<kpts[counter].size()<<std::endl;
+				take_initial_vicon=true;
 
 
-				for(uint i=0;i<kpts[counter].size();i++)
-				{
-					//						std::cout<<"point at"<<kpts[counter].at(i).pt.x<<","<<kpts[counter].at(i).pt.y<<std::endl;
-					if(	pcl_isfinite (kinectCloud[counter].at(kpts[counter].at(i).pt.x,kpts[counter].at(i).pt.y).x) &&
-							pcl_isfinite (kinectCloud[counter].at(kpts[counter].at(i).pt.x,kpts[counter].at(i).pt.y).y) &&
-							pcl_isfinite (kinectCloud[counter].at(kpts[counter].at(i).pt.x,kpts[counter].at(i).pt.y).z))
-					{
-						//						tmpPoint.x=kinectCloud[counter].at(kpts[counter].at(i).pt.x,kpts[counter].at(i).pt.y).x;
-						//						tmpPoint.y=kinectCloud[counter].at(kpts[counter].at(i).pt.x,kpts[counter].at(i).pt.y).y;
-						//						tmpPoint.z=kinectCloud[counter].at(kpts[counter].at(i).pt.x,kpts[counter].at(i).pt.y).z;
-						tmpPoint=kinectCloud[counter].at(kpts[counter].at(i).pt.x,kpts[counter].at(i).pt.y);
-						//						std::cout<<"pushback0:"<<i<<"pointx:"<<tmpPoint.x<<std::endl;
-						//						std::cout<<"pushback0:"<<i<<"pointy:"<<tmpPoint.y<<std::endl;
-						//						std::cout<<"pushback0:"<<i<<"pointz:"<<tmpPoint.z<<std::endl;
-						//						FeatureTmp[1].push_back(FrameData[1].Points.points[matches_popcount[i].trainIdx]);
-						//						push_back_point.x=kinectCloud[0].at(kpts[0][matches_popcount[i].queryIdx].pt.x,kpts[0][matches_popcount[i].queryIdx].pt.y).x;
-						dtorstmp.push_back(dtors[counter].row(i));
-						kpts_tmp.push_back(kpts[counter].at(i));
-						tmpCloud.push_back(tmpPoint);
-
-					}
-				}
-				dtors[counter]=dtorstmp;
-				//				std::cout<<"testsize: kpts_tmp: "<<kpts_tmp.size()<<std::endl;
-				kpts[counter]=kpts_tmp;
-				//				std::cout<<"testsize: kpts[counter]: "<<kpts[counter].size()<<std::endl;
-				//				std::cout<<"testsize: tmpCloud"<<tmpCloud.size()<<std::endl;
-				//				extractor->compute(cv_image[counter],kpts[counter],dtors[counter]);
-				//				std::cout<<"testsize: kpts[counter] after extractor: "<<kpts[counter].size()<<std::endl;
-				//				FrameData[counter].Keypoint=kpts[counter];
-				FrameData[counter].Points=tmpCloud;
-				FrameData[counter].Descriptor=dtors[counter];
-				FrameData[counter].Keypoints=kpts[counter];
-				FrameData[counter].KinectCloud=kinectCloud[counter];
-				std::cout<<"counter:"<<counter<<std::endl;
-				std::cout<<"take_initial_vicon:"<<take_initial_vicon<<std::endl;
-				if(counter==0)
-				{
-					if(take_initial_vicon)
-					{
-						std::cout<<"vicontransform"<<vicontransform<<std::endl;
-						FrameData[counter].Transformation=vicontransform;//imuRot;
-						std::cout<<"copying 0 if"<<std::endl;
-
-					}
-					else
-					{
-//						while(notcopied)
-//							cvWaitKey(30);
-						std::cout<<"vicontransform"<<vicontransform<<std::endl;
-
-						std::cout<<"copying 0 esle"<<std::endl;
-						FrameData[counter].Transformation=vicontransform;//;Eigen::Matrix4f::Identity();//imuRot;
-					}
-					KeyframeDataVector.push_back(FrameData[counter]);
-					PointCloud tmp;
-					tmp.header.frame_id="/pgraph";
-					pcl::transformPointCloud(KeyframeDataVector.at(KeyframeDataVector.size()-1).Points,tmp,KeyframeDataVector.at(KeyframeDataVector.size()-1).Transformation);
-					KeyFramePointClouds+=tmp;
-					Eigen::Quaternion<float> quat_test(KeyframeDataVector.at(KeyframeDataVector.size()-1).Transformation.block<3,3>(0,0));
-					trans_vec_keyframe=KeyframeDataVector.at(KeyframeDataVector.size()-1).Transformation.block<3,1>(0,3);
-					quat_rot_keyframe=quat_test;
-					//Publish Camera poses for SBA
-					//					KeyFrameMarker.pose.pose.orientation.w=quat_rot_keyframe.w();
-					//					KeyFrameMarker.pose.pose.orientation.x=quat_rot_keyframe.x();//+cos(M_PI/2.0);
-					//					KeyFrameMarker.pose.pose.orientation.y=quat_rot_keyframe.y();//-cos(M_PI/2.0);
-					//					KeyFrameMarker.pose.pose.orientation.z=quat_rot_keyframe.z();//+cos(M_PI/2.0);
-					//					KeyFrameMarker.pose.pose.position.x=trans_vec_keyframe[0];
-					//					KeyFrameMarker.pose.pose.position.y=trans_vec_keyframe[1];
-					//					KeyFrameMarker.pose.pose.position.z=trans_vec_keyframe[2];
-
-					KeyFrameMarker.header.frame_id="/pgraph";//kinectCloud[0].header.frame_id;
-					KeyFrameMarker.header.stamp=ros::Time::now();
-					//if(compute_transform_success)
-					KeyFrameMarkers.publish(KeyFrameMarker);
-					//					std::cout<<"size of keyframedatavector"<<KeyframeDataVector.size()<<std::endl;
-					//					if(doSLAM)
-					//					{
-					//						SBAmap.Descriptor.push_back(KeyframeDataVector.at(KeyframeDataVector.size()-1).Descriptor);
-					//						//						SBAmap.Keypoints=KeyframeDataVector.at(KeyframeDataVector.size()-1).Keypoints;
-					//						SBAmap.Points.push_back(KeyframeDataVector.at(KeyframeDataVector.size()-1).Points);
-					//
-					//					}
-				}
-				if(counter)
-					compute_counter++;
-			}
-			called_first_time=false;
-
-			if(showTime)
-			{
-				time_t end_time=clock();
-				std::cout<<"time for detection and extraction:\t"<<(float(end_time)-float(start_time))/CLOCKS_PER_SEC<<std::endl;
-
-				end_time2=clock();
-				std::cout<<"time for detection and extraction and copy:\t"<<(float(end_time2)-float(start_time2))/CLOCKS_PER_SEC<<std::endl;
 
 			}
-			{
-				if(counter==1)
-				{
-					//					std::cout<<"beforeshow"<<std::endl;
-					if(showDisplay)
-					{
-						cvSetImageROI( imgadd,cvRect( 0, 0,cv_image[0]->width, cv_image[0]->height ) );
-						cvCopy(cv_image[0],imgadd);
-						cvResetImageROI(imgadd);
-						cvSetImageROI( imgadd,cvRect( 0, cv_image[0]->height,cv_image[0]->width, cv_image[0]->height ) );
-						cvCopy(cv_image[1],imgadd);
-						cvResetImageROI(imgadd);
-					}
-					if(showTime)
-						start_time=clock();
-					//extract the features
-					//					std::cout<<"beforematch"<<std::endl;
+			else{
+				//			ros::spinOnce();
 
-					if(actual_keyframe==(KeyframeDataVector.size()-1))
-						matchFeature(dtors[0],dtors[1],matches_popcount);
-					else
-						matchFeature(KeyframeDataVector.at(actual_keyframe).Descriptor,dtors[1],matches_popcount);
-
-					std::cout<<"size of matches_popcount"<<matches_popcount.size()<<std::endl;
-
-					if(showTime)
-					{
-						end_time=clock();
-						std::cout<<"time for match Feature:\t"<<(float(end_time)-float(start_time))/CLOCKS_PER_SEC<<std::endl;
-					}
-
-					if(showTime)
-						start_time=clock();
-					//do RANSAC and compute the transforamtion
-					RANSACandTransformation();
-					if(showTime)
-					{
-						end_time=clock();
-						std::cout<<"time for RANSAC and Tranformation:\t"<<(float(end_time)-float(start_time))/CLOCKS_PER_SEC<<std::endl;
-					}
-					//					if(doSLAM)
-					//					{
-					//						if(showTime)
-					//							start_time=clock();
-					//						//transfomr the pointclouds
-					//						transformPointcloud();
-					//						if(showTime)
-					//						{
-					//							end_time=clock();
-					//							std::cout<<"time for transfomringpointcloud:\t"<<(float(end_time)-float(start_time))/CLOCKS_PER_SEC<<std::endl;
-					//						}
-					//					}
-					if(doSLAM&&slammed==0)
-					{
-						//						slammed=1;
-						//						//Publish Camera poses for SBA
-						//						camera_pos.pose.orientation.x=quat_rot.x()/quat_rot.w();
-						//						camera_pos.pose.orientation.y=quat_rot.y()/quat_rot.w();
-						//						camera_pos.pose.orientation.z=quat_rot.z()/quat_rot.w();
-						//						camera_pos.header.frame_id="/pgraph";
-						//						ros::Time tstamp=ros::Time::now();
-						//						camera_pos.header.stamp=tstamp;
-						//						camera_pos.type=visualization_msgs::Marker::CUBE;
-						//						camera_pos.scale.x=1;
-						//						camera_pos.scale.y=1;
-						//						camera_pos.scale.z=1;
-						//						camera_pos.pose.position.x=trans_vec[0];
-						//						camera_pos.pose.position.y=trans_vec[1];
-						//						camera_pos.pose.position.z=trans_vec[2];
-						//						camera_pos.ns = "my_namespace";
-						//						camera_pos.id = 0;
-						//						camera_pos.color.a = 1.0f;
-						//						camera_pos.color.r = 0.0f;
-						//						camera_pos.color.g = 1.0f;
-						//						camera_pos.color.b = 0.0f;
-						//						cam_marker_pub.publish(camera_pos);
-						//						transformPointcloud();
-						////						transformedCloud.publish(kinectCloud[0]);
-						//						std::cout<<"pulished the slam stuff"<<std::endl;
-
-
-					}
-					publishEverything();
-					averageTime+=whole_time;
-					if(showTime)
-						std::cout<<"thewholethingtakes:"<<whole_time<<"averagetime:"<<averageTime/float(compute_counter)<<std::endl;
-
-
-
-
-					if(showTime)
-						start_time=clock();
-
-
-					if(next_keyframe)
-					{
-						swap();
-
-					}
-					if(showDisplay)
-					{
-						cvShowImage("RGB Image 1", imgadd);
-						//cvShowImage("RGB Image 0", cv_image[0]);
-						cvWaitKey(30);
-						//				fprintf (pFile, "%d,%f,%f,%f,%f,%f,%f\n",correspondences_source_good.size(),trans_vec[0],trans_vec[1],trans_vec[2],quat_rot.x(),quat_rot.y(),quat_rot.z(),quat_rot.w());
-
-					}
-
-
-					//		std::cout<<"vor calback ende briefmapdesc"<<briefMapDescriptors->total<<"briefframedesc"<<briefFrameDescriptors->total<<std::endl;
-					if(showTime)
-					{
-						end_time=clock();
-						std::cout<<"time for swapping:\t"<<(float(end_time)-float(start_time))/CLOCKS_PER_SEC<<std::endl;
-					}
-
-				}
 				if(showTime)
 				{
-					finish = clock();
-					whole_time = (double(finish)-double(start))/CLOCKS_PER_SEC;
+					start = clock();
+					std::cout<<"untill callback called again \t:"<< double((double(start)-double(finish))/CLOCKS_PER_SEC)<<std::endl;
 				}
+				if(showTime)
+					start_time2=clock();
+				if(called_first_time)
+					counter=0;
+				else
+					counter=1;
+
+				std::cout<<"counter:"<<counter<<std::endl;
+
+				//			std::cout<<"counter and calledfirst"<<counter<<",<"<<called_first_time<<std::endl;
+				cvCopy(callback_image,cv_image[counter]);
+				kinectCloud[counter]=callbackCloud;
+				kinectCloud[counter].header.frame_id="/pgraph";
+				called=0;
+
+				if(showTime)
+					time_t start_time=clock();
+
+				{
+					//		        if( m.refcount )
+					//		            CV_XADD(m.refcount, 1);
+					//		        release();
+					//		        flags = m.flags;
+					//		        if( dims <= 2 && m.dims <= 2 )
+					//		        {
+					//		            dims = m.dims;
+					//		            rows = m.rows;
+					//		            cols = m.cols;
+					//		            step[0] = m.step[0];
+					//		            step[1] = m.step[1];
+					//		        }
+					//		        else
+					//		            copySize(m);
+					//		        data = m.data;
+					//		        datastart = m.datastart;
+					//		        dataend = m.dataend;
+					//		        datalimit = m.datalimit;
+					//		        refcount = m.refcount;
+					//		        allocator = m.allocator;
+
+					PointCloud tmpCloud;
+					tmpCloud.header.frame_id="/pgraph";
+					std::vector<cv::KeyPoint> kpts_tmp;
+
+
+
+					Point tmpPoint;
+
+					cv::Mat dtorstmp;
+					detector->detect(cv_image[counter],kpts[counter]);
+					extractor->compute(cv_image[counter],kpts[counter],dtors[counter]);
+					dtorstmp.flags=dtors[counter].flags;
+					dtorstmp.dims=dtors[counter].dims;
+					dtorstmp.cols=dtors[counter].cols;
+					dtorstmp.step[0]=dtors[counter].step[0];
+					dtorstmp.step[1]=dtors[counter].step[1];
+					//				if( dtorstmp.refcount )
+					//				            CV_XADD(detorstmp.refcount, 1);
+					//				        flags = m.flags;
+					//				        if( dims <= 2 && m.dims <= 2 )
+					//				        {
+					//				            dims = m.dims;
+					//				            rows = m.rows;
+					//				            cols = m.cols;
+					//				            step[0] = m.step[0];
+					//				            step[1] = m.step[1]
+					//				//				std::cout<<"testsize: kpts[counter]: "<<kpts[counter].size()<<std::endl;
+
+
+					for(uint i=0;i<kpts[counter].size();i++)
+					{
+						//						std::cout<<"point at"<<kpts[counter].at(i).pt.x<<","<<kpts[counter].at(i).pt.y<<std::endl;
+						if(	pcl_isfinite (kinectCloud[counter].at(kpts[counter].at(i).pt.x,kpts[counter].at(i).pt.y).x) &&
+								pcl_isfinite (kinectCloud[counter].at(kpts[counter].at(i).pt.x,kpts[counter].at(i).pt.y).y) &&
+								pcl_isfinite (kinectCloud[counter].at(kpts[counter].at(i).pt.x,kpts[counter].at(i).pt.y).z))
+						{
+							//						tmpPoint.x=kinectCloud[counter].at(kpts[counter].at(i).pt.x,kpts[counter].at(i).pt.y).x;
+							//						tmpPoint.y=kinectCloud[counter].at(kpts[counter].at(i).pt.x,kpts[counter].at(i).pt.y).y;
+							//						tmpPoint.z=kinectCloud[counter].at(kpts[counter].at(i).pt.x,kpts[counter].at(i).pt.y).z;
+							tmpPoint=kinectCloud[counter].at(kpts[counter].at(i).pt.x,kpts[counter].at(i).pt.y);
+							//						std::cout<<"pushback0:"<<i<<"pointx:"<<tmpPoint.x<<std::endl;
+							//						std::cout<<"pushback0:"<<i<<"pointy:"<<tmpPoint.y<<std::endl;
+							//						std::cout<<"pushback0:"<<i<<"pointz:"<<tmpPoint.z<<std::endl;
+							//						FeatureTmp[1].push_back(FrameData[1].Points.points[matches_popcount[i].trainIdx]);
+							//						push_back_point.x=kinectCloud[0].at(kpts[0][matches_popcount[i].queryIdx].pt.x,kpts[0][matches_popcount[i].queryIdx].pt.y).x;
+							dtorstmp.push_back(dtors[counter].row(i));
+							kpts_tmp.push_back(kpts[counter].at(i));
+							tmpCloud.push_back(tmpPoint);
+
+						}
+					}
+					dtors[counter]=dtorstmp;
+					//				std::cout<<"testsize: kpts_tmp: "<<kpts_tmp.size()<<std::endl;
+					kpts[counter]=kpts_tmp;
+					//				std::cout<<"testsize: kpts[counter]: "<<kpts[counter].size()<<std::endl;
+					//				std::cout<<"testsize: tmpCloud"<<tmpCloud.size()<<std::endl;
+					//				extractor->compute(cv_image[counter],kpts[counter],dtors[counter]);
+					//				std::cout<<"testsize: kpts[counter] after extractor: "<<kpts[counter].size()<<std::endl;
+					//				FrameData[counter].Keypoint=kpts[counter];
+					FrameData[counter].Points=tmpCloud;
+					FrameData[counter].Descriptor=dtors[counter];
+					FrameData[counter].Keypoints=kpts[counter];
+					FrameData[counter].KinectCloud=kinectCloud[counter];
+					std::cout<<"counter:"<<counter<<std::endl;
+					std::cout<<"take_initial_vicon:"<<take_initial_vicon<<std::endl;
+					if(counter==0)
+					{
+						if(take_initial_vicon)
+						{
+							std::cout<<"vicontransform"<<vicontransform<<std::endl;
+							FrameData[counter].Transformation=vicontransform;//imuRot;
+							std::cout<<"copying 0 if"<<std::endl;
+
+						}
+						else
+						{
+							//						while(notcopied)
+							//							cvWaitKey(30);
+							std::cout<<"vicontransform"<<vicontransform<<std::endl;
+
+							std::cout<<"copying 0 esle"<<std::endl;
+							FrameData[counter].Transformation=vicontransform;//;Eigen::Matrix4f::Identity();//imuRot;
+						}
+						KeyframeDataVector.push_back(FrameData[counter]);
+						PointCloud tmp;
+						tmp.header.frame_id="/pgraph";
+						pcl::transformPointCloud(KeyframeDataVector.at(KeyframeDataVector.size()-1).Points,tmp,KeyframeDataVector.at(KeyframeDataVector.size()-1).Transformation);
+						KeyFramePointClouds+=tmp;
+						Eigen::Quaternion<float> quat_test(KeyframeDataVector.at(KeyframeDataVector.size()-1).Transformation.block<3,3>(0,0));
+						trans_vec_keyframe=KeyframeDataVector.at(KeyframeDataVector.size()-1).Transformation.block<3,1>(0,3);
+						quat_rot_keyframe=quat_test;
+						//Publish Camera poses for SBA
+						//					KeyFrameMarker.pose.pose.orientation.w=quat_rot_keyframe.w();
+						//					KeyFrameMarker.pose.pose.orientation.x=quat_rot_keyframe.x();//+cos(M_PI/2.0);
+						//					KeyFrameMarker.pose.pose.orientation.y=quat_rot_keyframe.y();//-cos(M_PI/2.0);
+						//					KeyFrameMarker.pose.pose.orientation.z=quat_rot_keyframe.z();//+cos(M_PI/2.0);
+						//					KeyFrameMarker.pose.pose.position.x=trans_vec_keyframe[0];
+						//					KeyFrameMarker.pose.pose.position.y=trans_vec_keyframe[1];
+						//					KeyFrameMarker.pose.pose.position.z=trans_vec_keyframe[2];
+
+						KeyFrameMarker.header.frame_id="/pgraph";//kinectCloud[0].header.frame_id;
+						KeyFrameMarker.header.stamp=ros::Time::now();
+						//if(compute_transform_success)
+						KeyFrameMarkers.publish(KeyFrameMarker);
+						//					std::cout<<"size of keyframedatavector"<<KeyframeDataVector.size()<<std::endl;
+						//					if(doSLAM)
+						//					{
+						//						SBAmap.Descriptor.push_back(KeyframeDataVector.at(KeyframeDataVector.size()-1).Descriptor);
+						//						//						SBAmap.Keypoints=KeyframeDataVector.at(KeyframeDataVector.size()-1).Keypoints;
+						//						SBAmap.Points.push_back(KeyframeDataVector.at(KeyframeDataVector.size()-1).Points);
+						//
+						//					}
+					}
+					if(counter)
+						compute_counter++;
+				}
+				called_first_time=false;
+
+				if(showTime)
+				{
+					time_t end_time=clock();
+					std::cout<<"time for detection and extraction:\t"<<(float(end_time)-float(start_time))/CLOCKS_PER_SEC<<std::endl;
+
+					end_time2=clock();
+					std::cout<<"time for detection and extraction and copy:\t"<<(float(end_time2)-float(start_time2))/CLOCKS_PER_SEC<<std::endl;
+
+				}
+				{
+					if(counter==1)
+					{
+						//					std::cout<<"beforeshow"<<std::endl;
+						if(showDisplay)
+						{
+							cvSetImageROI( imgadd,cvRect( 0, 0,cv_image[0]->width, cv_image[0]->height ) );
+							cvCopy(cv_image[0],imgadd);
+							cvResetImageROI(imgadd);
+							cvSetImageROI( imgadd,cvRect( 0, cv_image[0]->height,cv_image[0]->width, cv_image[0]->height ) );
+							cvCopy(cv_image[1],imgadd);
+							cvResetImageROI(imgadd);
+						}
+						if(showTime)
+							start_time=clock();
+						//extract the features
+						//					std::cout<<"beforematch"<<std::endl;
+
+						if(actual_keyframe==(KeyframeDataVector.size()-1))
+							matchFeature(dtors[0],dtors[1],matches_popcount);
+						else
+							matchFeature(KeyframeDataVector.at(actual_keyframe).Descriptor,dtors[1],matches_popcount);
+
+						std::cout<<"size of matches_popcount"<<matches_popcount.size()<<std::endl;
+
+						if(showTime)
+						{
+							end_time=clock();
+							std::cout<<"time for match Feature:\t"<<(float(end_time)-float(start_time))/CLOCKS_PER_SEC<<std::endl;
+						}
+
+						if(showTime)
+							start_time=clock();
+						//do RANSAC and compute the transforamtion
+						RANSACandTransformation();
+						if(showTime)
+						{
+							end_time=clock();
+							std::cout<<"time for RANSAC and Tranformation:\t"<<(float(end_time)-float(start_time))/CLOCKS_PER_SEC<<std::endl;
+						}
+						//					if(doSLAM)
+						//					{
+						//						if(showTime)
+						//							start_time=clock();
+						//						//transfomr the pointclouds
+						//						transformPointcloud();
+						//						if(showTime)
+						//						{
+						//							end_time=clock();
+						//							std::cout<<"time for transfomringpointcloud:\t"<<(float(end_time)-float(start_time))/CLOCKS_PER_SEC<<std::endl;
+						//						}
+						//					}
+						if(doSLAM&&slammed==0)
+						{
+							//						slammed=1;
+							//						//Publish Camera poses for SBA
+							//						camera_pos.pose.orientation.x=quat_rot.x()/quat_rot.w();
+							//						camera_pos.pose.orientation.y=quat_rot.y()/quat_rot.w();
+							//						camera_pos.pose.orientation.z=quat_rot.z()/quat_rot.w();
+							//						camera_pos.header.frame_id="/pgraph";
+							//						ros::Time tstamp=ros::Time::now();
+							//						camera_pos.header.stamp=tstamp;
+							//						camera_pos.type=visualization_msgs::Marker::CUBE;
+							//						camera_pos.scale.x=1;
+							//						camera_pos.scale.y=1;
+							//						camera_pos.scale.z=1;
+							//						camera_pos.pose.position.x=trans_vec[0];
+							//						camera_pos.pose.position.y=trans_vec[1];
+							//						camera_pos.pose.position.z=trans_vec[2];
+							//						camera_pos.ns = "my_namespace";
+							//						camera_pos.id = 0;
+							//						camera_pos.color.a = 1.0f;
+							//						camera_pos.color.r = 0.0f;
+							//						camera_pos.color.g = 1.0f;
+							//						camera_pos.color.b = 0.0f;
+							//						cam_marker_pub.publish(camera_pos);
+							//						transformPointcloud();
+							////						transformedCloud.publish(kinectCloud[0]);
+							//						std::cout<<"pulished the slam stuff"<<std::endl;
+
+
+						}
+						publishEverything();
+						averageTime+=whole_time;
+						if(showTime)
+							std::cout<<"thewholethingtakes:"<<whole_time<<"averagetime:"<<averageTime/float(compute_counter)<<std::endl;
+
+
+
+
+						if(showTime)
+							start_time=clock();
+
+
+						if(next_keyframe)
+						{
+							swap();
+
+						}
+						if(showDisplay)
+						{
+							cvShowImage("RGB Image 1", imgadd);
+							//cvShowImage("RGB Image 0", cv_image[0]);
+							cvWaitKey(30);
+							//				fprintf (pFile, "%d,%f,%f,%f,%f,%f,%f\n",correspondences_source_good.size(),trans_vec[0],trans_vec[1],trans_vec[2],quat_rot.x(),quat_rot.y(),quat_rot.z(),quat_rot.w());
+
+						}
+
+
+						//		std::cout<<"vor calback ende briefmapdesc"<<briefMapDescriptors->total<<"briefframedesc"<<briefFrameDescriptors->total<<std::endl;
+						if(showTime)
+						{
+							end_time=clock();
+							std::cout<<"time for swapping:\t"<<(float(end_time)-float(start_time))/CLOCKS_PER_SEC<<std::endl;
+						}
+
+					}
+					if(showTime)
+					{
+						finish = clock();
+						whole_time = (double(finish)-double(start))/CLOCKS_PER_SEC;
+					}
+				}
+				//ROS_INFO("waiting for next image... bad corresp. until now:%d",countOfBadCorrespondences);
 			}
-			//ROS_INFO("waiting for next image... bad corresp. until now:%d",countOfBadCorrespondences);
-		}
 		}
 
 	}
@@ -1033,6 +1043,7 @@ EXTRACT::EXTRACT(bool displ,float thresh, int iterations, int minimal_inliers, i
 
 void EXTRACT::swap()
 {
+	pushed_already=false;
 
 
 	std::cout<<"next_keyframe"<<std::endl;
@@ -1072,6 +1083,10 @@ void EXTRACT::swap()
 
 	//	findNearestKeyframetoLastandComputeTransformation(KeyframeDataVector.at(KeyframeDataVector.size()-1));
 	FrameData[0].Transformation=FrameData[1].Transformation;
+	FrameData[0].edges_to=FrameData[1].edges_to;
+	FrameData[0].Transformation_to=FrameData[0].Transformation_to;
+	FrameData[1].edges_to.clear();
+	FrameData[1].Transformation_to.clear();
 	PointCloud tmp;
 	tmp.header.frame_id="/pgraph";
 	//	pcl::transformPointCloud(KeyframeDataVector.at(KeyframeDataVector.size()-2).Points,tmp,KeyframeDataVector.at(KeyframeDataVector.size()-2).Transformation);
@@ -1304,12 +1319,43 @@ void EXTRACT::swap()
 		//		transformPointcloud();
 		////		transformedCloud.publish(kinectTransformedOld);
 		//		std::cout<<"pulished the slam stuff"<<std::endl;
-		//		swap_counter++;
+		swap_counter++;
+
+		//		number_of_swaps++;
+		//				The vertices are specified as follws: VETREX3 x y z phi theta psi
 		//
-		//		if(swap_counter>number_of_swaps)
-		//		{
-		//			doSBAwithMap();
-		//		}
+		//				The edges are specified as follows: EDGE3 observed_vertex_id observing_vertex_id x y z roll pitch yaw
+		//				inf_11 inf_12 .. inf_16 inf_22 .. inf_66 (the information matrix is specified via its upper triangular
+		//				block that means 21 values).
+		//
+
+		if(swap_counter>number_of_swaps)
+		{
+			refineMapWithTORO(&KeyframeDataVector);
+			PointCloud tmp2;
+			tmp2.header.frame_id="/pgraph";
+
+			for(uint i=0;i<KeyframeDataVector.size();i++)
+			{
+				PointCloud tmp;
+				tmp.header.frame_id="/pgraph";
+
+				pcl::transformPointCloud(KeyframeDataVector.at(i).Points,tmp,KeyframeDataVector.at(i).Transformation);
+				tmp2+=tmp;
+
+			}
+			while(ros::ok())
+			{
+				std::cout<<"publishing old points"<<std::endl;
+				KeyFramePoints.publish(KeyFramePointClouds);
+				cvWaitKey(5000);
+				std::cout<<"publishing new points"<<std::endl;
+				KeyFramePoints.publish(tmp2);
+				cvWaitKey(5000);
+			}
+
+		}
+
 		//
 		//
 	}
@@ -1348,7 +1394,7 @@ void EXTRACT::findNearestKeyframetoLastandComputeTransformation(struct FrameData
 		//	std::cout<<"in 2"<<std::endl;
 
 		if(small_dist!=10000)
-			std::cout<<"nearest keyframe from: "<<KeyframeDataVector.size()-1<< "is:"<<keyframe_number<<"with dist:"<<small_dist<<std::endl;
+			std::cout<<"nearest keyframe from: "<<KeyframeDataVector.size()+1<< "is:"<<keyframe_number<<"with dist:"<<small_dist<<std::endl;
 		else
 		{
 			std::cout<<"no nearest keyframe except for last"<<std::endl;
@@ -1436,18 +1482,24 @@ void EXTRACT::findNearestKeyframetoLastandComputeTransformation(struct FrameData
 		//Check whether we need next keyframe
 		if(ransac_inliers>nearest_keyframe_inliers)
 		{
-			std::cout<<"computing new transform"<<std::endl;
+			//			std::cout<<"computing new transform"<<std::endl;
 			pcl::estimateRigidTransformationSVD(Feature_Keyframe[1],corr_Keyframe_inliers,Feature_Keyframe[0],corr_Keyframe_inliers,transformation_);
-			std::cout<<"transformation between:\n"<<transformation_<<std::endl;
+			//			std::cout<<"transformation between:\n"<<transformation_<<std::endl;
 			transformOld=KeyframeDataVector.at(keyframe_number).Transformation*transformation_;
-			next_keyframe=false;
+			//			next_keyframe=false;
 			actual_keyframe=keyframe_number;
 			FrameData[counter].Transformation=transformOld;
+			//			if(pushed_already=false)
+			//			{
+			FrameData[counter].edges_to.push_back(keyframe_number);
+			FrameData[counter].Transformation_to.push_back(transformation_);
+			//			pushed_already=true;
+			//			}
 			//adding points to keyframe
 			//			pcl::transformPointCloud(Last.Points,Last.Points,transformOld*Last.Transformation.inverse());
 			Last.Transformation=transformOld;
 
-			std::cout<<"new transform \n"<<transformOld<<std::endl;
+			//			std::cout<<"new transform \n"<<transformOld<<std::endl;
 
 		}
 	}
@@ -3332,5 +3384,151 @@ void EXTRACT::imuCallback (const sensor_msgs::Imu& imuMsg)
 		//	prev_rotation = curr_rotation;
 		//imuMutex_.unlock();
 	}
+}
+
+void EXTRACT::refineMapWithTORO(std::vector<struct FrameData>* map)
+{
+	AISNavigation::TreeOptimizer3 pg;
+
+	for(uint i=0; i<map->size();i++)
+	{
+		Eigen::Quaternion<float> tmp_quat(map->at(i).Transformation.block<3,3>(0,0));
+		btQuaternion tmp_btquat(tmp_quat.x(),tmp_quat.y(),tmp_quat.z(),tmp_quat.w());
+		btMatrix3x3 tmp_mat(tmp_btquat);
+		Eigen::Vector3f tmp_vec;
+		tmp_vec=map->at(i).Transformation.block<3,1>(0,3);
+
+		float x=tmp_vec[0];
+		float y=tmp_vec[1];
+		float z=tmp_vec[2];
+		double R,P,Y;
+		tmp_mat.getRPY(R,P,Y);
+		TreePoseGraph3::Vertex V;
+		AISNavigation::TreePoseGraph3::Pose pose;
+
+		pose.x()=x;
+		pose.y()=y;
+		pose.z()=z;
+		pose.roll()=(float)R;
+		pose.pitch()=(float)P;
+		pose.yaw()=(float)Y;
+
+		pg.addVertex(i,pose);
+
+		printf("added VERTEX3 %d %f %f %f %f %f %f\n",i,x,y,z,(float)R,(float)P,(float)Y);
+
+						fprintf (pFile, "VERTEX3 %d %f %f %f %f %f %f\n",i,x,y,z,(float)R,(float)P,(float)Y);
+
+	}
+	for(uint i=0;i<map->size();i++)
+		for(uint w=0;w<map->at(i).edges_to.size();w++)
+		{
+			//			std::cout<<"map->edges_to.atw"<<map->at(i).edges_to.at(w)<<std::endl;
+			Eigen::Quaternion<float> tmp_quat(map->at(i).Transformation_to.at(w).block<3,3>(0,0));
+			btQuaternion tmp_btquat(tmp_quat.x(),tmp_quat.y(),tmp_quat.z(),tmp_quat.w());
+			btMatrix3x3 tmp_mat(tmp_btquat);
+			Eigen::Vector3f tmp_vec;
+			tmp_vec=map->at(i).Transformation_to.at(w).block<3,1>(0,3);
+
+			float x=tmp_vec[0];
+			float y=tmp_vec[1];
+			float z=tmp_vec[2];
+			double R,P,Y;
+			tmp_mat.getRPY(R,P,Y);
+
+			AISNavigation::TreePoseGraph3::Vertex* v1=pg.vertex(map->at(i).edges_to.at(w));
+			AISNavigation::TreePoseGraph3::Vertex* v2=pg.vertex(i);
+			AISNavigation::TreePoseGraph3::Pose pose;
+			pose.x()=x;
+			pose.y()=y;
+			pose.z()=z;
+			pose.roll()=(float)R;
+			pose.pitch()=(float)P;
+			pose.yaw()=(float)Y;
+
+			AISNavigation::TreePoseGraph3::Transformation t(pose);
+			AISNavigation::TreePoseGraph3::InformationMatrix m;
+			m=DMatrix<double>::I(6);
+			pg.addEdge(v1,v2,t,m);
+			printf ("ADDIng edgeEDGE3 %d %d %f %f %f %f %f %f\n",map->at(i).edges_to.at(w),i,x,y,z,(float)R,(float)P,(float)Y);
+			fprintf (pFile, "EDGE3 %d %d %f %f %f %f %f %f\n",map->at(i).edges_to.at(w),i,x,y,z,(float)R,(float)P,(float)Y);
+		}
+
+	//			AISNavigation::TreeOptimizer3 pg;
+	bool compressIndices=false;
+	bool reduceNodes=true;
+	bool initializeOnTree=true;
+	int  treeType=0;
+	int  iterations=100;
+	bool dumpIterations=false;
+	bool dumpError=true;
+	bool adaptiveRestart=false;
+	int  verboseLevel=0;
+	bool ignorePreconditioner=false;
+	bool overrideCovariances=false;
+	bool twoDimensions = false;
+	AISNavigation::TreeOptimizer3::EdgeCompareMode compareMode=AISNavigation::EVComparator<AISNavigation::TreeOptimizer3::Edge*>::CompareLevel;
+
+	pg.verboseLevel=verboseLevel;
+
+	//			  if (!pg.load("3d_data.graph", overrideCovariances, twoDimensions)) {
+	//			    std::cout << "FATAL ERROR: Could not read file. Abrting." << std::endl;
+	//			  }
+	pg.restartOnDivergence=adaptiveRestart;
+
+
+	pg.buildSimpleTree();
+	pg.initializeOnTree();
+	pg.initializeTreeParameters();
+	pg.initializeOptimization(compareMode);
+	double l=pg.totalPathLength();
+	int nEdges=pg.edges.size();
+	double apl=l/(double)(nEdges);
+	bool corrupted=false;
+
+	for (int i=0; i<iterations; i++)
+	{
+		pg.iterate(0,ignorePreconditioner);
+	      double mte, mre, are, ate;
+	      double error=pg.error(&mre, &mte, &are, &ate);
+	      std::cout<<"error: "<<error<<std::endl;
+//		printf("%d\n",i);
+	}
+
+	for (TreePoseGraph3::VertexMap::iterator it=pg.vertices.begin(); it!=pg.vertices.end(); it++){
+//		std::cout<<"transformation before:"<<map->at(i).Transformation<<std::endl;
+
+		TreePoseGraph3::Vertex* v=it->second;
+		Eigen::Vector3f tmp_vec;
+		v->pose=v->transformation.toPoseType();
+		tmp_vec[0]=v->pose.x();
+		tmp_vec[1]=v->pose.y();
+		tmp_vec[2]=v->pose.z();
+		map->at(v->id).Transformation.block<3,1>(0,3)=tmp_vec;
+		btMatrix3x3 m;
+		m.setRPY((double)v->pose.roll(),(double)v->pose.pitch(),(double)v->pose.yaw());
+		tmp_vec[0]=m.getColumn(0)[0];
+		tmp_vec[1]=m.getColumn(0)[1];
+		tmp_vec[2]=m.getColumn(0)[2];
+		map->at(v->id).Transformation.block<3,1>(0,0)=tmp_vec;
+		tmp_vec[0]=m.getColumn(1)[0];
+		tmp_vec[1]=m.getColumn(1)[1];
+		tmp_vec[2]=m.getColumn(1)[2];
+		map->at(v->id).Transformation.block<3,1>(0,1)=tmp_vec;
+		tmp_vec[0]=m.getColumn(2)[0];
+		tmp_vec[1]=m.getColumn(2)[1];
+		tmp_vec[2]=m.getColumn(2)[2];
+		map->at(v->id).Transformation.block<3,1>(0,2)=tmp_vec;
+
+//		std::cout<<"transformation after:"<<map->at(i).Transformation<<std::endl;
+
+		printf("new VERTEX3 %d %f %f %f %f %f %f\n",v->id,v->pose.x(),v->pose.y(),v->pose.z(),(float)v->pose.roll(),(float)v->pose.pitch(),(float)v->pose.yaw());
+
+
+
+		//		std::cout<<"x"<<v->pose.x()<<std::endl;
+		//			    v->pose=v->transformation.toPoseType();
+	}
+
 }
 
