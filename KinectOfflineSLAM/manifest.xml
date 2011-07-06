@@ -1,0 +1,23 @@
+<package>
+  <description brief="KinectOfflineSLAM">
+
+     ROS package to create a feature-map with a Kinect sensor.
+
+  </description>
+  <author>Benedikt Mathis</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/KinectOfflineSLAM</url>
+  <depend package="roscpp"/>
+  <depend package="opencv2"/>
+  <depend package="sensor_msgs"/>
+  <depend package="cv_bridge"/>
+  <depend package="std_msgs"/>
+  <depend package="image_transport"/>
+  <depend package="pcl"/>
+  <depend package="pcl_ros"/>
+  <depend package="message_filters"/>
+
+</package>
+
+
