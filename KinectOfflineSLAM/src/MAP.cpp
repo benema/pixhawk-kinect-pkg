@@ -738,6 +738,8 @@ void MAP::swap()
 		dtorstmp.step[0]=dtors[counter].step[0];
 		dtorstmp.step[1]=dtors[counter].step[1];
 
+		std::cout<<"Keyframedatatvector.at0.transfor"<<KeyframeDataVector.at(0).Transformation<<std::endl;
+
 		refineMapWithTORO(&KeyframeDataVector);
 		PointCloud tmp2;
 		tmp2.header.frame_id="/pgraph";
@@ -953,11 +955,11 @@ void MAP::refineMapWithTORO(std::vector<struct FrameData>* map)
 		if(showDisplay)
 			printf("new VERTEX3 %d %f %f %f %f %f %f\n",v->id,v->pose.x(),v->pose.y(),v->pose.z(),(float)v->pose.roll(),(float)v->pose.pitch(),(float)v->pose.yaw());
 
-		std::cout<<"first transformation:"<<finalMAP.at(0).Transformation<<std::endl;
-
 
 
 	}
+	std::cout<<"first transformation after toro:"<<finalMAP.at(0).Transformation<<std::endl;
+
 
 }
 
