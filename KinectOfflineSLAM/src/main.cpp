@@ -13,7 +13,7 @@ std::string filepath="mapdata.bin";
 static GOptionEntry entries[] =
 {
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose", NULL },
-		{ "initializiation", 'v', 0, G_OPTION_ARG_INT, &initialization, "0 start with Identity, 1 start with IMU, 2 start with Vicon", NULL },
+		{ "initializiation", 'z', 0, G_OPTION_ARG_INT, &initialization, "0 start with Identity, 1 start with IMU, 2 start with Vicon", NULL },
 		{ "ransac_threshold", 't', 0, G_OPTION_ARG_DOUBLE, &ransac_threshold, "inlier threshold for RANSAC", ".2" },
 		{ "ransac_it", 'i', 0, G_OPTION_ARG_INT, &ransac_it, "Maximum iterations for RANSAC", "200" },
 		{ "min_inlier", 'm', 0, G_OPTION_ARG_INT, &min_inlier, "Minimal inlier to compute transformation", "70" },

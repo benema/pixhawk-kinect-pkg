@@ -80,13 +80,13 @@ MAP::MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 	ros::AsyncSpinner spinner(0);
 	spinner.start();
 	if(init=2)
-		while(vicon_computed==0)
+		while(vicon_computed==0&&ros::ok)
 		{
 			std::cout<<"Waiting for Vicon data"<<std::endl;
 			cvWaitKey(1000);
 		}
 	if(init=1)
-		while(imu_computed==0)
+		while(imu_computed==0&&ros::ok)
 		{
 			std::cout<<"Waiting for IMU data"<<std::endl;
 			cvWaitKey(1000);
