@@ -398,8 +398,8 @@ void MAP::RANSACandTransformation()
 	}
 
 
-	if(showDisplay)
-		std::cout<<"correspondences_inliers.size() RANSACINLIERS"<<correspondences_inliers.size()<<std::endl;
+//	if(showDisplay)
+		std::cout<<"RANSACINLIERS"<<correspondences_inliers.size()<<std::endl;
 }
 
 
@@ -1059,8 +1059,8 @@ void MAP::findConnectionsBetweenKeyframes(int number,struct FrameData& from, std
 
 			if(showDisplay)
 			{
-				if(showDisplay)
-					ROS_ERROR("number of correspondences  after ransac with nearest keyframe %d",corr_Keyframe_inliers.size());
+//				if(showDisplay)
+					ROS_ERROR("number of correspondences between %d and %d are: %d",number,c,corr_Keyframe_inliers.size());
 			}
 			ransac_inliers=corr_Keyframe_inliers.size();
 
