@@ -6,7 +6,7 @@ int ransac_it=200;
 int type=0;
 int min_inlier=70;
 int min_keyframe=130;
-std::string filepath="../KinectOfflineSLAM/mapdata.bin";
+std::string filepath="mapdata.bin";
 
 static GOptionEntry entries[] =
 {
@@ -16,7 +16,7 @@ static GOptionEntry entries[] =
 		{ "ransac_it", 'i', 0, G_OPTION_ARG_INT, &ransac_it, "Maximum iterations for RANSAC", "200" },
 		{ "min_inlier", 'm', 0, G_OPTION_ARG_INT, &min_inlier, "Minimal inlier to compute transformation (only for odometry to last frame)", "70" },
 		{ "min_keyframe", 'k', 0, G_OPTION_ARG_INT, &min_keyframe, "Minimal inlier to keep the same Keyframe (only for odometry to last frame)", "130" },
-		{ "filepath", 'f', 0, G_OPTION_ARG_STRING, &filepath, "path of file in which map is stored", "../KinectOfflineSLAM/mapdata.bin" },
+		{ "filepath", 'f', 0, G_OPTION_ARG_STRING, &filepath, "path of file in which map is stored", "mapdata.bin" },
 		{ NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, 0 }
 
 };

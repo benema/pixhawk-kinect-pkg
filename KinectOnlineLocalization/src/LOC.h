@@ -26,7 +26,7 @@
 #include <pcl/common/eigen.h>
 //maybe
 //#include <string>
-//#include <time.h>
+#include <time.h>
 //#include <stdio.h>
 //
 #include <pcl/sample_consensus/ransac.h>
@@ -86,6 +86,10 @@ private:
 	ros::Subscriber viconSubscriber;
 	ros::Subscriber commandSubscriber;
     ros::Publisher KeyFramePoints;
+	ros::Publisher cameraPose_pub;
+	ros::Publisher bodyPoseStamped_pub;
+
+
 
 
 	//Parameters from the programm start
@@ -104,7 +108,7 @@ private:
 	cv::Ptr<cv::FeatureDetector> detector;
 	/// Descriptor Extractor used for getting descriptors around image features.
 	cv::Ptr<cv::DescriptorExtractor> extractor;
-	cv::BruteForceMatcher<cv::Hamming> matcher_popcount;
+	cv::BruteForceMatcher<cv::HammingLUT> matcher_popcount;
 
 
 
@@ -144,6 +148,8 @@ private:
     int ransac_inliers;
     bool transformation_at_least_twice_computed;
     bool map_loaded;
+    time_t start;
+    time_t end;
 
 
 
@@ -179,7 +185,7 @@ private:
 	void createCorrespondingPointcloud(struct FrameData& Data0,PointCloud& Cloud0,struct FrameData& Data1,PointCloud& Cloud1,std::vector<int>& correspondvector,vector<cv::DMatch>& matches,bool show,std::vector<cv::KeyPoint>& kpts0,std::vector<cv::KeyPoint>& kpts1);
 	void RANSAC();
 	void swap();
-	void computeTransformationToMap(struct FrameData& from, struct MapData &map);
+	void computeTransformationToMap(struct FrameData& from, struct MapData &map, Eigen::Matrix4f &transform);
 
 
 

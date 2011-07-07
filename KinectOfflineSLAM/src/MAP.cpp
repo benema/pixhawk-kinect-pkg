@@ -13,9 +13,8 @@ static CvScalar colors[] =
 		{{255,255,255}}
 };
 
-MAP::MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,bool verbose, int near_keyframe_inliers,string filepath)
+MAP::MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,bool verbose, int near_keyframe_inliers,string filepath,int initialization)
 {
-	path=filepath;
 	//Initialization of start parameters
 	showDisplay=verbose;
 	ransac_acc=thresh;
@@ -23,6 +22,8 @@ MAP::MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 	min_inliers=minimal_inliers;
 	min_keyframe_inlier=keyframe_inliers;
 	min_keyframe_redection_inliers=near_keyframe_inliers;
+	path=filepath;
+	init=initialization;
 
 	//other variables
 	detector = new cv::GridAdaptedFeatureDetector(new cv::FastFeatureDetector,500);
@@ -38,6 +39,7 @@ MAP::MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 	transformation_at_least_once_computed=false;
 	stop_mapping=false;
 	vicon_computed=false;
+	imu_computed=false;
 	next_keyframe=false;
 	FeaturePointCloud[0].header.frame_id=std::string("/openni_depth_optical_frame");
 	FeaturePointCloud[0].is_dense = false;
@@ -77,15 +79,23 @@ MAP::MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 
 	ros::AsyncSpinner spinner(0);
 	spinner.start();
+	if(init=2)
+		while(vicon_computed==0)
+		{
+			std::cout<<"Waiting for Vicon data"<<std::endl;
+			cvWaitKey(1000);
+		}
+	if(init=1)
+		while(imu_computed==0)
+		{
+			std::cout<<"Waiting for IMU data"<<std::endl;
+			cvWaitKey(1000);
+		}
+
 	while(ros::ok())
 	{
-
 		if(called==1)
 		{
-
-			if(showDisplay)
-				std::cout<<"1"<<std::endl;
-
 			if(called_first_time)
 				counter=0;
 			else
@@ -108,8 +118,6 @@ MAP::MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 			dtorstmp.step[0]=dtors[counter].step[0];
 			dtorstmp.step[1]=dtors[counter].step[1];
 
-			if(showDisplay)
-				std::cout<<"2"<<std::endl;
 
 			for(uint i=0;i<kpts[counter].size();i++)
 			{
@@ -135,16 +143,13 @@ MAP::MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 
 			if(counter==0)
 			{
-				if(showDisplay)
-				{
-					std::cout<<"KeyframeDataVector.size()"<<KeyframeDataVector.size()<<std::endl;
-				}
+				if(init==2)
+					FrameData[counter].Transformation=vicontransform;
+				if(init==1)
+					FrameData[counter].Transformation=imuRot;
+				if(init==0)
+					FrameData[counter].Transformation=Eigen::Matrix4f::Identity();
 				KeyframeDataVector.push_back(FrameData[counter]);
-				KeyframeDataVector.at(0).Transformation=Eigen::Matrix4f::Identity();
-				if(showDisplay)
-				{
-					std::cout<<"KeyframeDataVector..trans"<<KeyframeDataVector.at(0).Transformation<<std::endl;
-				}
 			}
 
 			called_first_time=false;
@@ -314,6 +319,8 @@ void MAP::imuCallback (const sensor_msgs::Imu& imuMsg)
 	tmp_vec[2]=m.getColumn(2)[2];
 
 	imuRot.block<3,1>(0,2)=tmp_vec;
+
+	imu_computed=true;
 }
 
 void MAP::callback(const PointCloud::ConstPtr& pointCloud_ptr,const sensor_msgs::ImageConstPtr& image_ptr)
@@ -775,7 +782,7 @@ void MAP::swap()
 		}
 		std::cout<<"row"<<refinedMap.Descriptor.rows<<std::endl;
 		std::cout<<"cols"<<refinedMap.Descriptor.cols<<std::endl;
-//		cv::Mat* desc=cvCloneMat(refinedMap.Descriptor);
+
 		mapfile.write((char *)(&refinedMap.Descriptor.rows),sizeof(refinedMap.Descriptor.rows));
 		mapfile.write((char *)(&refinedMap.Descriptor.cols),sizeof(refinedMap.Descriptor.cols));
 		std::cout<<"type:"<<refinedMap.Descriptor.type()<<std::endl;
@@ -784,70 +791,8 @@ void MAP::swap()
 			{
 				uchar tmp=(*refinedMap.Descriptor.row(y).col(x).data);
 				mapfile.write((char *)(&tmp), sizeof(tmp));
-//				std::cout<<tmp<<",";
-//				int test=(int)(*refinedMap.Descriptor.row(y).col(x).data);
-
-//				refinedMap.Descriptor.row(y).col(x)
-//				double test=cvGetReal2D(&refinedMap.Descriptor,y,x);
-//				std::cout<<"test.val[0]"<<test.val[0]<<std::endl;;
-//				std::cout<<"test.val[1]"<<test.val[1]<<std::endl;;
-//				std::cout<<"test.val[2]"<<test.val[2]<<std::endl;;
-//				std::cout<<"test.val[3]"<<test.val[3]<<std::endl;;
-
-//typedef cv::Scalar_<double> DScalar
-//				int test=(int)cv::(&refinedMap.Descriptor,y,x);
-//				int test=(int)cvGet2D(desc,y,x);
-//				cv::Mat test=refinedMap.Descriptor.row(y).col(x);
-//				int* row=refinedMap.Descriptor.ptr<int>(y);
-//				std::cout<<test<<",";
-
-//				if(x==refinedMap.Descriptor.cols-1)
-//					std::cout<<std::endl;
 			}
 		mapfile.close();
-
-//		std::cout<<"refinedMap.descd"<<refinedMap.Descriptor<<std::endl;
-//
-		struct MapData copiedmap;
-		std::ifstream readfile;
-		readfile.open(path.c_str(),ios::binary);
-		int pointsize;
-		readfile.read((char *)(&pointsize),sizeof(pointsize));
-		std::cout<<"pointsize:"<<pointsize<<std::endl;
-		Point tmpPoint;
-		for(uint i=0;i<pointsize;i++)
-		{
-			readfile.read((char *)(&tmpPoint.x),sizeof(tmpPoint.x));
-			readfile.read((char *)(&tmpPoint.y),sizeof(tmpPoint.y));
-			readfile.read((char *)(&tmpPoint.z),sizeof(tmpPoint.z));
-			if(i<100)
-			std::cout<<"tmpPoint.z"<<tmpPoint.z<<std::endl;
-			copiedmap.Points.push_back(tmpPoint);
-		}
-		int rows,cols;
-
-		readfile.read((char *)(&rows),sizeof(rows));
-		readfile.read((char *)(&cols),sizeof(cols));
-
-		cv::Mat tmp_desc(rows,cols,0);
-		for(uint y=0;y<rows;y++)
-		for(uint x=0;x<cols;x++)
-				readfile.read((char *)(tmp_desc.row(y).col(x).data),sizeof(*tmp_desc.row(y).col(x).data));
-
-		readfile.close();
-
-		copiedmap.Descriptor=tmp_desc;
-		std::cout<<"copiedmap.descripotr:"<<copiedmap.Descriptor<<std::endl;
-		std::cout<<"originalmap.descripotr:"<<refinedMap.Descriptor<<std::endl;
-
-		std::cout<<"size of points:"<<copiedmap.Points.size()<<std::endl;
-		for(uint i=0;i<copiedmap.Points.size();i++)
-		{
-			std::cout<<"copiedma.POints"<<copiedmap.Points.points.at(i).z<<std::endl;
-			std::cout<<"refinedmap.POints"<<refinedMap.Points.points.at(i).z<<std::endl;
-		}
-//		std::cout<<"descriptor before:"<<std::endl<<refinedMap.Descriptor<<std::endl;
-//		std::cout<<"descriptor after:"<<std::endl<<copiedmap.Descriptor<<std::endl;
 
 		if(showDisplay)
 		while(ros::ok())

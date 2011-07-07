@@ -68,13 +68,20 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 	viconSubscriber= n.subscribe("/fromMAVLINK/Vicon",1,&LOC::viconCallback,this);
 	commandSubscriber= n.subscribe("/fromMAVLINK/COMMAND",1,&LOC::commandCallback,this);
 
-	KeyFramePoints=n.advertise<PointCloud>("KinectOfflineSLAM/keyframepoints",1);
+
+	KeyFramePoints=n.advertise<PointCloud>("KinectOnlineLocalization/keyframepoints",1);
+	cameraPose_pub=n.advertise<geometry_msgs::PoseStamped>("/KinectOnlineLocalization/helicopterpose",1);
+	bodyPoseStamped_pub=n.advertise<geometry_msgs::PoseStamped>("/toMAVLINK/bodyPoseStamped",1);
+
+
 
 
 
 
 	sync.registerCallback(&LOC::callback,this);
 	//	ros::spin();
+
+
 
 	ros::AsyncSpinner spinner(0);
 	spinner.start();
@@ -102,7 +109,7 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 					readfile.read((char *)(&tmpPoint.x),sizeof(tmpPoint.x));
 					readfile.read((char *)(&tmpPoint.y),sizeof(tmpPoint.y));
 					readfile.read((char *)(&tmpPoint.z),sizeof(tmpPoint.z));
-					std::cout<<"tmpPoint.z"<<tmpPoint.z<<std::endl;
+//					std::cout<<"tmpPoint.z"<<tmpPoint.z<<std::endl;
 					copiedmap.Points.push_back(tmpPoint);
 				}
 				int rows,cols;
@@ -118,6 +125,7 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 				readfile.close();
 
 				copiedmap.Descriptor=tmp_desc;
+				copiedmap.Points.header.frame_id="/pgraph";
 				//				std::ifstream readfile;
 				//				readfile.open(path.c_str(),ios::binary);
 				//				if(readfile.is_open())
@@ -131,17 +139,20 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 //				readfile.close();
 				map_loaded=true;
 
-				std::cout<<"size of points"<<copiedmap.Points.size()<<std::endl;
+//				std::cout<<"size of points"<<copiedmap.Points.size()<<std::endl;
 
 				if(showDisplay)
 				{
 					std::cout<<"map copied"<<std::endl;
 					//					std::cout<<"copiedmap.pooints.x"<<copiedmap.Points.points.at(0).x<<std::endl;
-					std::cout<<"copiedmap.descripotr:"<<copiedmap.Descriptor<<std::endl;
+//					std::cout<<"copiedmap.descripotr:"<<copiedmap.Descriptor<<std::endl;
 				}
 			}
 			if(called==1&&map_loaded)
 			{
+				if(showDisplay)
+					start=clock();
+
 				cvCopy(callback_image,cv_image[0]);
 				kinectCloud[0]=callbackCloud;
 				kinectCloud[0].header.frame_id="/pgraph";
@@ -159,8 +170,6 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 				dtorstmp.step[0]=dtors[0].step[0];
 				dtorstmp.step[1]=dtors[0].step[1];
 
-				if(showDisplay)
-					std::cout<<"2"<<std::endl;
 
 				for(uint i=0;i<kpts[0].size();i++)
 				{
@@ -175,8 +184,7 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 
 					}
 				}
-				if(showDisplay)
-					std::cout<<"3"<<std::endl;
+
 				dtors[0]=dtorstmp;
 				kpts[0]=kpts_tmp;
 
@@ -185,11 +193,57 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 				FrameData[0].Keypoints=kpts[0];
 				FrameData[0].KinectCloud=kinectCloud[0];
 
-				if(showDisplay)
-					std::cout<<"4"<<std::endl;
 				//do RANSAC and compute the transforamtion
-				computeTransformationToMap(FrameData[0],copiedmap);
+				computeTransformationToMap(FrameData[0],copiedmap, transformation_);
 
+				Eigen::Matrix3f rot_matrix=transformation_.block<3,3>(0,0);
+				Eigen::Vector3f trans_vec=transformation_.block<3,1>(0,3);
+				Eigen::Quaternion<float> quat_rot(rot_matrix);
+
+				// variable for the position of the camera (used only for visualization)
+				geometry_msgs::PoseStamped cameraPose;
+
+				if(showDisplay)
+				{
+
+
+					cameraPose.header.frame_id="/pgraph";
+					cameraPose.pose.position.x=trans_vec[0];
+					cameraPose.pose.position.y=trans_vec[1];
+					cameraPose.pose.position.z=trans_vec[2];
+
+					cameraPose.pose.orientation.w=quat_rot.w();
+					cameraPose.pose.orientation.x=quat_rot.x();
+					cameraPose.pose.orientation.y=quat_rot.y();
+					cameraPose.pose.orientation.z=quat_rot.z();
+
+					cameraPose_pub.publish(cameraPose);
+					KeyFramePoints.publish(copiedmap.Points);
+				}
+
+
+				geometry_msgs::PoseStamped heliPose;
+
+				heliPose.header.frame_id="/pgraph";
+				heliPose.header.stamp=ros::Time::now();
+				heliPose.pose.position.x=trans_vec[2];
+				heliPose.pose.position.y=trans_vec[0];
+				heliPose.pose.position.z=trans_vec[1];
+
+				heliPose.pose.orientation.w=quat_rot.w();
+				heliPose.pose.orientation.x=quat_rot.z();
+				heliPose.pose.orientation.y=quat_rot.x();
+				heliPose.pose.orientation.z=quat_rot.y();
+
+
+				bodyPoseStamped_pub.publish(heliPose);
+
+
+				if(showDisplay)
+				{
+					end=clock();
+					std::cout<<"time to compute transformation"<<(double(end)-double(start))/double(CLOCKS_PER_SEC);
+				}
 			}
 		}
 
@@ -705,7 +759,7 @@ void LOC::swap()
 
 }
 
-void LOC::computeTransformationToMap(struct FrameData& from, struct MapData &map)
+void LOC::computeTransformationToMap(struct FrameData& from, struct MapData &map, Eigen::Matrix4f &transform)
 {
 	Eigen::Vector3f tmp_dist;
 	vector<cv::DMatch> matches;
@@ -718,18 +772,17 @@ void LOC::computeTransformationToMap(struct FrameData& from, struct MapData &map
 	Feature_Keyframe[1].header.frame_id="/pgraph";
 
 
-	std::cout<<"mapdescripotr:"<<map.Descriptor<<std::endl;
-	if(showDisplay)
-		std::cout<<"5"<<std::endl;
-	matchFeature(map.Descriptor,from.Descriptor,matches);
+//	std::cout<<"mapdescripotr:"<<map.Descriptor<<std::endl;
+
+	matchFeature(from.Descriptor,map.Descriptor,matches);
 	if(showDisplay)
 		std::cout<<"matching features: "<<matches.size()<<std::endl;
 
 	for (size_t i = 0; i < matches.size(); i++)
 	{
-		Feature_Keyframe[0].push_back(map.Points.points[matches[i].queryIdx]);
+		Feature_Keyframe[0].push_back(from.Points.points[matches[i].queryIdx]);
 		corr_Keyframe.push_back(i);
-		Feature_Keyframe[1].push_back(from.Points.points[matches[i].trainIdx]);
+		Feature_Keyframe[1].push_back(map.Points.points[matches[i].trainIdx]);
 
 	}
 
@@ -771,10 +824,12 @@ void LOC::computeTransformationToMap(struct FrameData& from, struct MapData &map
 		}
 
 	}
-
-	pcl::estimateRigidTransformationSVD(Feature_Keyframe[1],corr_Keyframe_inliers,Feature_Keyframe[0],corr_Keyframe_inliers,transformation_);
 	if(showDisplay)
-		std::cout<<"transformation_:"<<transformation_<<std::endl;
+		std::cout<<"ransac inliers:"<<corr_Keyframe_inliers.size()<<std::endl;
+
+	pcl::estimateRigidTransformationSVD(Feature_Keyframe[0],corr_Keyframe_inliers,Feature_Keyframe[1],corr_Keyframe_inliers,transform);
+	if(showDisplay)
+		std::cout<<"transform:"<<transform<<std::endl;
 }
 
 
