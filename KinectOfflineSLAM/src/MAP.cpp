@@ -143,6 +143,8 @@ MAP::MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 
 			if(counter==0)
 			{
+				std::cout<<"init:"<<init<<std::endl;
+				std::cout<<"imuRot"<<std::endl<<imuRot<<std::endl;;
 				if(init==2)
 					FrameData[counter].Transformation=vicontransform;
 				if(init==1)
@@ -151,9 +153,9 @@ MAP::MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 					FrameData[counter].Transformation=Eigen::Matrix4f::Identity();
 				KeyframeDataVector.push_back(FrameData[counter]);
 
-				std::cout<<"vicontransform:"<<vicontransform<<std::endl;
+				std::cout<<"vicontransform:"<<std::endl<<vicontransform<<std::endl;
 				std::cout<<"size of keyframedatavector"<<KeyframeDataVector.size()<<std::endl;
-				std::cout<<"Keyframedatavector.at(0).transformation after vicon"<<KeyframeDataVector.at(0).Transformation<<std::endl;
+				std::cout<<"Keyframedatavector.at(0).transformation after vicon"<<std::endl<<KeyframeDataVector.at(0).Transformation<<std::endl;
 			}
 
 			called_first_time=false;
