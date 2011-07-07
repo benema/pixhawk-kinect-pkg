@@ -968,9 +968,12 @@ void MAP::refineMapWithTORO(std::vector<struct FrameData>* map)
 
 	}
 	Eigen::Matrix4f rot=systemRot*finalMAP.at(0).Transformation.inverse();
+	std::cout<<"rot"<<std::endl<<rot<<std::endl;
+	std::cout<<"first transformation after torobefore transform:"<<finalMAP.at(0).Transformation<<std::endl;
+
 	for(int k=0;k<finalMAP.size();k++)
 		finalMAP.at(k).Transformation=rot*finalMAP.at(k).Transformation;
-	std::cout<<"first transformation after toro:"<<finalMAP.at(0).Transformation<<std::endl;
+	std::cout<<"first transformation after toroafter transfrom:"<<finalMAP.at(0).Transformation<<std::endl;
 
 
 }
