@@ -1,0 +1,23 @@
+<package>
+  <description brief="KinectOnlineLocalization">
+
+     ROS package to use the map from KinectOfflineSLAM and localize the kinect
+
+  </description>
+  <author>Benedikt Mathis</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/KinectOnlineLocalization</url>
+    <depend package="roscpp"/>
+  <depend package="opencv2"/>
+  <depend package="sensor_msgs"/>
+  <depend package="cv_bridge"/>
+  <depend package="std_msgs"/>
+  <depend package="image_transport"/>
+  <depend package="pcl"/>
+  <depend package="pcl_ros"/>
+  <depend package="message_filters"/>
+
+</package>
+
+
