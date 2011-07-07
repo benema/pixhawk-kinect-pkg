@@ -143,18 +143,23 @@ MAP::MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 
 			if(counter==0)
 			{
-//				std::cout<<"init:"<<init<<std::endl;
-//				std::cout<<"imuRot"<<std::endl<<imuRot<<std::endl;;
+				//				std::cout<<"init:"<<init<<std::endl;
+				//				std::cout<<"imuRot"<<std::endl<<imuRot<<std::endl;;
 				if(init==2)
+				{
 					systemRot=vicontransform;
-//					FrameData[counter].Transformation=vicontransform;
+					FrameData[counter].Transformation=vicontransform;
+				}
 				if(init==1)
+				{
 					systemRot=imuRot;
-//					FrameData[counter].Transformation=imuRot;
+					FrameData[counter].Transformation=imuRot;
+				}
 				if(init==0)
+				{
 					systemRot=Eigen::Matrix4f::Identity();
-
-				FrameData[counter].Transformation=Eigen::Matrix4f::Identity();
+					FrameData[counter].Transformation=Eigen::Matrix4f::Identity();
+				}
 				KeyframeDataVector.push_back(FrameData[counter]);
 
 				std::cout<<"vicontransform:"<<std::endl<<vicontransform<<std::endl;
@@ -219,8 +224,8 @@ MAP::MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 
 void MAP::viconCallback (const geometry_msgs::PoseStamped& viconMsg)
 {
-//	if(showDisplay)
-//		std::cout<<"in viconcallback"<<std::endl;
+	//	if(showDisplay)
+	//		std::cout<<"in viconcallback"<<std::endl;
 	quat_vicon.x()=viconMsg.pose.orientation.x;
 	quat_vicon.y()=viconMsg.pose.orientation.y;
 	quat_vicon.z()=viconMsg.pose.orientation.z;
@@ -242,10 +247,10 @@ void MAP::viconCallback (const geometry_msgs::PoseStamped& viconMsg)
 
 
 	btMatrix3x3 m(quat_tmp);
-//	if(showDisplay)
-//		std::cout<<"m vicon:"<<m.getRow(0)[0]<<" "<<m.getRow(0)[1]<<" "<<m.getRow(0)[2]<<std::endl
-//		<<" "<<m.getRow(1)[0]<<" "<<m.getRow(1)[1]<<" "<<m.getRow(1)[2]<<std::endl
-//		<<" "<<m.getRow(2)[0]<<" "<<m.getRow(2)[1]<<" "<<m.getRow(2)[2]<<std::endl;
+	//	if(showDisplay)
+	//		std::cout<<"m vicon:"<<m.getRow(0)[0]<<" "<<m.getRow(0)[1]<<" "<<m.getRow(0)[2]<<std::endl
+	//		<<" "<<m.getRow(1)[0]<<" "<<m.getRow(1)[1]<<" "<<m.getRow(1)[2]<<std::endl
+	//		<<" "<<m.getRow(2)[0]<<" "<<m.getRow(2)[1]<<" "<<m.getRow(2)[2]<<std::endl;
 
 
 
@@ -305,8 +310,8 @@ void MAP::imuCallback (const sensor_msgs::Imu& imuMsg)
 	double Roll, Pitch, Yaw;
 	m.getRPY(Roll, Pitch, Yaw);
 	//	m.setRPY(Roll,Pitch,0);
-//	if(showDisplay)
-//		std::cout<<"roll"<<Roll<<"pitch"<<Pitch<<"yaw"<<Yaw<<std::endl;
+	//	if(showDisplay)
+	//		std::cout<<"roll"<<Roll<<"pitch"<<Pitch<<"yaw"<<Yaw<<std::endl;
 
 
 
@@ -557,15 +562,15 @@ void MAP::RANSAC()
 
 
 	}
-//	if(take_vicon)
-//	{
-//		next_keyframe=true;
-//		transformOld=vicontransform;
-//		if(showDisplay)
-//			std::cout<<"vicontransform:"<<std::endl<<vicontransform<<std::endl;
-//
-//		take_vicon=false;
-//	}
+	//	if(take_vicon)
+	//	{
+	//		next_keyframe=true;
+	//		transformOld=vicontransform;
+	//		if(showDisplay)
+	//			std::cout<<"vicontransform:"<<std::endl<<vicontransform<<std::endl;
+	//
+	//		take_vicon=false;
+	//	}
 
 	if(showDisplay)
 		std::cout<<"transformold"<<std::endl<<transformOld<<std::endl;
@@ -811,15 +816,15 @@ void MAP::swap()
 		while(ros::ok())
 		{
 			if(showDisplay){
-			std::cout<<"size of pointcloud:"<<refinedMap.Points.size()<<std::endl;
-			std::cout<<"size of descriptor:"<<refinedMap.Descriptor.rows<<std::endl;
-			if(showDisplay)
-				std::cout<<"publishing old points"<<std::endl;
-			KeyFramePoints.publish(tmp3);
-			cvWaitKey(5000);
-			if(showDisplay)
-				std::cout<<"publishing new points before copy"<<std::endl;
-			KeyFramePoints.publish(refinedMap.Points);
+				std::cout<<"size of pointcloud:"<<refinedMap.Points.size()<<std::endl;
+				std::cout<<"size of descriptor:"<<refinedMap.Descriptor.rows<<std::endl;
+				if(showDisplay)
+					std::cout<<"publishing old points"<<std::endl;
+				KeyFramePoints.publish(tmp3);
+				cvWaitKey(5000);
+				if(showDisplay)
+					std::cout<<"publishing new points before copy"<<std::endl;
+				KeyFramePoints.publish(refinedMap.Points);
 			}
 			cvWaitKey(5000);
 		}
@@ -864,6 +869,7 @@ void MAP::refineMapWithTORO(std::vector<struct FrameData>* map)
 		pose.yaw()=(float)Y;
 
 		pg.addVertex(i,pose);
+
 		if(showDisplay)
 		{
 			printf("added VERTEX3 %d %f %f %f %f %f %f\n",i,x,y,z,(float)R,(float)P,(float)Y);
