@@ -150,6 +150,8 @@ MAP::MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 				if(init==0)
 					FrameData[counter].Transformation=Eigen::Matrix4f::Identity();
 				KeyframeDataVector.push_back(FrameData[counter]);
+
+				std::cout<<"vicontransform:"<<vicontransform<<std::endl;
 			}
 
 			called_first_time=false;
@@ -826,6 +828,7 @@ void MAP::refineMapWithTORO(std::vector<struct FrameData>* map)
 	}
 	AISNavigation::TreeOptimizer3 pg;
 
+	std::cout<<"first transformation before toro:"<<map->at(0).Transformation<<std::endl;
 	for(uint i=0; i<map->size();i++)
 	{
 		Eigen::Quaternion<float> tmp_quat(map->at(i).Transformation.block<3,3>(0,0));
@@ -884,6 +887,7 @@ void MAP::refineMapWithTORO(std::vector<struct FrameData>* map)
 			AISNavigation::TreePoseGraph3::InformationMatrix m;
 			m=DMatrix<double>::I(6);
 			pg.addEdge(v1,v2,t,m);
+			if(showDisplay)
 			{
 				printf ("ADDIng edgeEDGE3 %d %d %f %f %f %f %f %f\n",map->at(i).edges_to.at(w),i,x,y,z,(float)R,(float)P,(float)Y);
 			}
@@ -948,6 +952,7 @@ void MAP::refineMapWithTORO(std::vector<struct FrameData>* map)
 		if(showDisplay)
 			printf("new VERTEX3 %d %f %f %f %f %f %f\n",v->id,v->pose.x(),v->pose.y(),v->pose.z(),(float)v->pose.roll(),(float)v->pose.pitch(),(float)v->pose.yaw());
 
+		std::cout<<"first transformation:"<<finalMAP.at(0).Transformation<<std::endl;
 
 
 
