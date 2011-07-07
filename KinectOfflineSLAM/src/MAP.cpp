@@ -959,7 +959,7 @@ void MAP::refineMapWithTORO(std::vector<struct FrameData>* map)
 			tmp_vec[1]=m.getColumn(2)[1];
 			tmp_vec[2]=m.getColumn(2)[2];
 			finalMAP.at(v->id).Transformation.block<3,1>(0,2)=tmp_vec;
-			finalMAP.at(v->id).Transformation=systemRot*finalMAP.at(v->id).Transformation;
+			finalMAP.at(v->id).Transformation=finalMAP.at(v->id).Transformation;
 		}
 		if(showDisplay)
 			printf("new VERTEX3 %d %f %f %f %f %f %f\n",v->id,v->pose.x(),v->pose.y(),v->pose.z(),(float)v->pose.roll(),(float)v->pose.pitch(),(float)v->pose.yaw());
@@ -967,6 +967,9 @@ void MAP::refineMapWithTORO(std::vector<struct FrameData>* map)
 
 
 	}
+	Eigen::Matrix4f rot=systemRot*finalMAP.at(0).Transformation.inverse();
+	for(int k=0;k<finalMAP.size();k++)
+		finalMAP.at(k).Transformation=rot*finalMAP.at(k).Transformation;
 	std::cout<<"first transformation after toro:"<<finalMAP.at(0).Transformation<<std::endl;
 
 
