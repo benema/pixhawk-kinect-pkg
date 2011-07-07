@@ -148,18 +148,21 @@ MAP::MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 				if(init==2)
 				{
 					systemRot=vicontransform;
-					FrameData[counter].Transformation=vicontransform;
+//					FrameData[counter].Transformation=vicontransform;
 				}
 				if(init==1)
 				{
 					systemRot=imuRot;
-					FrameData[counter].Transformation=imuRot;
+//					FrameData[counter].Transformation=imuRot;
 				}
 				if(init==0)
 				{
 					systemRot=Eigen::Matrix4f::Identity();
-					FrameData[counter].Transformation=Eigen::Matrix4f::Identity();
+//					FrameData[counter].Transformation=Eigen::Matrix4f::Identity();
 				}
+
+				FrameData[counter].Transformation=Eigen::Matrix4f::Identity();
+
 				KeyframeDataVector.push_back(FrameData[counter]);
 
 				std::cout<<"vicontransform:"<<std::endl<<vicontransform<<std::endl;
@@ -975,10 +978,12 @@ void MAP::refineMapWithTORO(std::vector<struct FrameData>* map)
 	}
 //	Eigen::Matrix4f rot=systemRot*finalMAP.at(0).Transformation.inverse();
 //	std::cout<<"rot"<<std::endl<<rot<<std::endl;
-//	std::cout<<"first transformation after torobefore transform:"<<finalMAP.at(0).Transformation<<std::endl;
+	std::cout<<"first transformation after torobefore transform:"<<std::endl<<finalMAP.at(0).Transformation<<std::endl;
+	std::cout<<"systemrot:"<<std::endl<<finalMAP.at(0).Transformation<<std::endl;
 //
-//	for(int k=0;k<finalMAP.size();k++)
-//		finalMAP.at(k).Transformation=rot*finalMAP.at(k).Transformation;
+
+	for(int k=0;k<finalMAP.size();k++)
+		finalMAP.at(k).Transformation=systemRot*finalMAP.at(k).Transformation;
 	std::cout<<"first transformation after toroafter transfrom:"<<finalMAP.at(0).Transformation<<std::endl;
 
 
