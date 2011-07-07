@@ -545,19 +545,19 @@ void MAP::RANSAC()
 			transformOld=frametrans;
 		}
 		else
-			transformOld=Eigen::Matrix4f::Identity();
+			transformOld=KeyframeDataVector.at(0).Transformation;
 
 
 	}
-	if(take_vicon)
-	{
-		next_keyframe=true;
-		transformOld=vicontransform;
-		if(showDisplay)
-			std::cout<<"vicontransform:"<<std::endl<<vicontransform<<std::endl;
-
-		take_vicon=false;
-	}
+//	if(take_vicon)
+//	{
+//		next_keyframe=true;
+//		transformOld=vicontransform;
+//		if(showDisplay)
+//			std::cout<<"vicontransform:"<<std::endl<<vicontransform<<std::endl;
+//
+//		take_vicon=false;
+//	}
 
 	if(showDisplay)
 		std::cout<<"transformold"<<std::endl<<transformOld<<std::endl;
@@ -798,9 +798,9 @@ void MAP::swap()
 
 		std::cout<<"!!!MAP CREATED!!!"<<std::endl;
 
-		if(showDisplay)
 		while(ros::ok())
 		{
+			if(showDisplay){
 			std::cout<<"size of pointcloud:"<<refinedMap.Points.size()<<std::endl;
 			std::cout<<"size of descriptor:"<<refinedMap.Descriptor.rows<<std::endl;
 			if(showDisplay)
@@ -810,6 +810,7 @@ void MAP::swap()
 			if(showDisplay)
 				std::cout<<"publishing new points before copy"<<std::endl;
 			KeyFramePoints.publish(refinedMap.Points);
+			}
 			cvWaitKey(5000);
 		}
 		return;
