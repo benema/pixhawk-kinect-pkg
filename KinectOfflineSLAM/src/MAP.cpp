@@ -953,6 +953,7 @@ void MAP::refineMapWithTORO(std::vector<struct FrameData>* map)
 		tmp_vec[2]=v->pose.z();
 		if(v->id<finalMAP.size())
 		{
+			finalMAP.at(v->id).Transformation=Eigen::Matrix4f::Identity();
 			finalMAP.at(v->id).Transformation.block<3,1>(0,3)=tmp_vec;
 			btMatrix3x3 m;
 			m.setRPY((double)v->pose.roll(),(double)v->pose.pitch(),(double)v->pose.yaw());
@@ -979,12 +980,12 @@ void MAP::refineMapWithTORO(std::vector<struct FrameData>* map)
 //	Eigen::Matrix4f rot=systemRot*finalMAP.at(0).Transformation.inverse();
 //	std::cout<<"rot"<<std::endl<<rot<<std::endl;
 	std::cout<<"first transformation after torobefore transform:"<<std::endl<<finalMAP.at(0).Transformation<<std::endl;
-	std::cout<<"systemrot:"<<std::endl<<finalMAP.at(0).Transformation<<std::endl;
+	std::cout<<"systemrot:"<<std::endl<<systemRot<<std::endl;
 //
 
 	for(int k=0;k<finalMAP.size();k++)
 		finalMAP.at(k).Transformation=systemRot*finalMAP.at(k).Transformation;
-	std::cout<<"first transformation after toroafter transfrom:"<<finalMAP.at(0).Transformation<<std::endl;
+	std::cout<<"first transformation after toroafter transfrom:"<<std::endl<<finalMAP.at(0).Transformation<<std::endl;
 
 
 }
