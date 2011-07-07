@@ -133,6 +133,7 @@ private:
 	Eigen::Matrix4f transformOld;
 	Eigen::Matrix4f vicontransform;
 	Eigen::Matrix4f imuRot;
+	Eigen::Matrix4f systemRot;
 	Eigen::Quaternion<float> quat_imu;
 //	Eigen::Quaternion<float> quat_rot;
 	Eigen::Quaternion<float> quat_vicon;
