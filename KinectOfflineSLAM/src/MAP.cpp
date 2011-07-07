@@ -13,8 +13,9 @@ static CvScalar colors[] =
 		{{255,255,255}}
 };
 
-MAP::MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,bool verbose, int near_keyframe_inliers)
+MAP::MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,bool verbose, int near_keyframe_inliers,string filepath)
 {
+	path=filepath;
 	//Initialization of start parameters
 	showDisplay=verbose;
 	ransac_acc=thresh;
@@ -123,7 +124,7 @@ MAP::MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 
 				}
 			}
-;
+			;
 			dtors[counter]=dtorstmp;
 			kpts[counter]=kpts_tmp;
 
@@ -141,9 +142,9 @@ MAP::MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 				KeyframeDataVector.push_back(FrameData[counter]);
 				KeyframeDataVector.at(0).Transformation=Eigen::Matrix4f::Identity();
 				if(showDisplay)
-					{
-						std::cout<<"KeyframeDataVector..trans"<<KeyframeDataVector.at(0).Transformation<<std::endl;
-					}
+				{
+					std::cout<<"KeyframeDataVector..trans"<<KeyframeDataVector.at(0).Transformation<<std::endl;
+				}
 			}
 
 			called_first_time=false;
@@ -572,10 +573,10 @@ void MAP::swap()
 	FrameData[1].matches_backward=matches_popcount;
 	FrameData[1].correspondences_backward=correspondences_inliers;
 	if(showDisplay)
-	std::cout<<"keyframdatavector"<<std::endl;
+		std::cout<<"keyframdatavector"<<std::endl;
 	KeyframeDataVector.push_back(FrameData[1]);
 	if(showDisplay)
-	std::cout<<"after"<<std::endl;
+		std::cout<<"after"<<std::endl;
 	actual_keyframe=KeyframeDataVector.size()-1;
 
 	kpts[0]=kpts[1];
@@ -760,89 +761,95 @@ void MAP::swap()
 			tmp3+=tmp;
 
 		}
+
+		//store the map in a file
 		std::ofstream mapfile;
-		mapfile.open("mapdata.txt",ios::binary);
+		mapfile.open(path.c_str(),ios::binary);
 		size_t size=refinedMap.Points.size();
 		mapfile.write((char *)(&size),sizeof(size));
-//		mapfile<<refinedMap.Points.size();
 		for(uint i=0;i<refinedMap.Points.size();i++)
 		{
-//			if(i==0||i==refinedMap.Points.size()-1)
-//			std::cout<<"refinedMap.Points.points.at(i).x:"<<refinedMap.Points.points.at(i).x<<std::endl;
-//			mapfile<<refinedMap.Points.points.at(i).x;
-//			mapfile<<refinedMap.Points.points.at(i).y;
-//			mapfile<<refinedMap.Points.points.at(i).z;
 			mapfile.write((char *)(&refinedMap.Points.points.at(i).x),sizeof(refinedMap.Points.points.at(i).x));
 			mapfile.write((char *)(&refinedMap.Points.points.at(i).y),sizeof(refinedMap.Points.points.at(i).y));
 			mapfile.write((char *)(&refinedMap.Points.points.at(i).z),sizeof(refinedMap.Points.points.at(i).z));
 		}
+		std::cout<<"row"<<refinedMap.Descriptor.rows<<std::endl;
+		std::cout<<"cols"<<refinedMap.Descriptor.cols<<std::endl;
+//		cv::Mat* desc=cvCloneMat(refinedMap.Descriptor);
+		mapfile.write((char *)(&refinedMap.Descriptor.rows),sizeof(refinedMap.Descriptor.rows));
+		mapfile.write((char *)(&refinedMap.Descriptor.cols),sizeof(refinedMap.Descriptor.cols));
+		std::cout<<"type:"<<refinedMap.Descriptor.type()<<std::endl;
+		for(int y=0;y<refinedMap.Descriptor.rows;y++)
+			for(int x=0;x<refinedMap.Descriptor.cols;x++)
+			{
+				uchar tmp=(*refinedMap.Descriptor.row(y).col(x).data);
+				mapfile.write((char *)(&tmp), sizeof(tmp));
+//				std::cout<<tmp<<",";
+//				int test=(int)(*refinedMap.Descriptor.row(y).col(x).data);
 
-//		mapfile<<dtorstmp.flags;
-//		mapfile<<dtorstmp.dims;
-//		mapfile<<dtorstmp.cols;
-//		mapfile<<dtorstmp.step[0];
-//		mapfile<<dtorstmp.step[1];
-//		mapfile<<refinedMap.Descriptor;
-//		for(uint i=0;i<refinedMap.Points.size();i++)
-//			mapfile<<refinedMap.Descriptor.row(i);
+//				refinedMap.Descriptor.row(y).col(x)
+//				double test=cvGetReal2D(&refinedMap.Descriptor,y,x);
+//				std::cout<<"test.val[0]"<<test.val[0]<<std::endl;;
+//				std::cout<<"test.val[1]"<<test.val[1]<<std::endl;;
+//				std::cout<<"test.val[2]"<<test.val[2]<<std::endl;;
+//				std::cout<<"test.val[3]"<<test.val[3]<<std::endl;;
+
+//typedef cv::Scalar_<double> DScalar
+//				int test=(int)cv::(&refinedMap.Descriptor,y,x);
+//				int test=(int)cvGet2D(desc,y,x);
+//				cv::Mat test=refinedMap.Descriptor.row(y).col(x);
+//				int* row=refinedMap.Descriptor.ptr<int>(y);
+//				std::cout<<test<<",";
+
+//				if(x==refinedMap.Descriptor.cols-1)
+//					std::cout<<std::endl;
+			}
 		mapfile.close();
 
-		size_t PointSize;
-		PointCloud mapCloud;
-		mapCloud.header.frame_id="/pgraph";
-		cv::Mat mapDesc;
-		Point mapPoint;
-
+//		std::cout<<"refinedMap.descd"<<refinedMap.Descriptor<<std::endl;
+//
+		struct MapData copiedmap;
 		std::ifstream readfile;
-		readfile.open("mapdata.bin",ifstream::binary);
-		readfile>>PointSize;
-		std::cout<<"PointSize"<<PointSize<<std::endl;
-	      for(uint k=0;k<PointSize;k++)
-	      {
+		readfile.open(path.c_str(),ios::binary);
+		int pointsize;
+		readfile.read((char *)(&pointsize),sizeof(pointsize));
+		std::cout<<"pointsize:"<<pointsize<<std::endl;
+		Point tmpPoint;
+		for(uint i=0;i<pointsize;i++)
+		{
+			readfile.read((char *)(&tmpPoint.x),sizeof(tmpPoint.x));
+			readfile.read((char *)(&tmpPoint.y),sizeof(tmpPoint.y));
+			readfile.read((char *)(&tmpPoint.z),sizeof(tmpPoint.z));
+			if(i<100)
+			std::cout<<"tmpPoint.z"<<tmpPoint.z<<std::endl;
+			copiedmap.Points.push_back(tmpPoint);
+		}
+		int rows,cols;
 
-	    	  float tmpx,tmpy,tmpz;
-	    	  readfile>>tmpx;
-	    	  readfile>>tmpy;
-	    	  readfile>>tmpz;
+		readfile.read((char *)(&rows),sizeof(rows));
+		readfile.read((char *)(&cols),sizeof(cols));
 
-	    	  if(tmpz>1)
-	    		  std::cout<<"tmpz"<<tmpz<<std::endl;
-	    	  mapPoint.x=tmpx;
-	    	  mapPoint.y=tmpy;
-	    	  mapPoint.z=tmpz;
-	    	  if(k==0)
-	    		  std::cout<<"mappointx"<<mapPoint.x<<std::endl;
-	    	  if(k==PointSize-1)
-	    		  std::cout<<"mappointx"<<mapPoint.x<<std::endl;
+		cv::Mat tmp_desc(rows,cols,0);
+		for(uint y=0;y<rows;y++)
+		for(uint x=0;x<cols;x++)
+				readfile.read((char *)(tmp_desc.row(y).col(x).data),sizeof(*tmp_desc.row(y).col(x).data));
 
-	    	  mapCloud.push_back(mapPoint);
-	      }
-//	      readfile>>mapDesc;
-//	      readfile>>mapDesc.dims;
-//	      readfile>>mapDesc.cols;
-//	      readfile>>mapDesc.step[0];
-//	      readfile>>mapDesc.step[1];
+		readfile.close();
 
-//	      readfile>>mapDesc;
+		copiedmap.Descriptor=tmp_desc;
+		std::cout<<"copiedmap.descripotr:"<<copiedmap.Descriptor<<std::endl;
+		std::cout<<"originalmap.descripotr:"<<refinedMap.Descriptor<<std::endl;
 
-	      mapDesc=refinedMap.Descriptor;
+		std::cout<<"size of points:"<<copiedmap.Points.size()<<std::endl;
+		for(uint i=0;i<copiedmap.Points.size();i++)
+		{
+			std::cout<<"copiedma.POints"<<copiedmap.Points.points.at(i).z<<std::endl;
+			std::cout<<"refinedmap.POints"<<refinedMap.Points.points.at(i).z<<std::endl;
+		}
+//		std::cout<<"descriptor before:"<<std::endl<<refinedMap.Descriptor<<std::endl;
+//		std::cout<<"descriptor after:"<<std::endl<<copiedmap.Descriptor<<std::endl;
 
-//	      readfile>>mapDesc;
-
-	      readfile.close();
-
-	      std::cout<<"size of refined:"<<refinedMap.Points.size()<<std::endl;
-	      std::cout<<"size of coppied:"<<mapCloud.size()<<std::endl;
-	      for(uint w=0;w<refinedMap.Points.size();w++)
-	      {
-    		  std::cout<<"copiedx"<<mapCloud.points.at(w).x<<std::endl;
-    		  std::cout<<"refinedx"<<refinedMap.Points.points.at(w).x<<std::endl;
-    		  std::cout<<"copiedy"<<mapCloud.points.at(w).y<<std::endl;
-    		  std::cout<<"refinedy"<<refinedMap.Points.points.at(w).y<<std::endl;
-    		  std::cout<<"copiedz"<<mapCloud.points.at(w).z<<std::endl;
-    		  std::cout<<"refinedz"<<refinedMap.Points.points.at(w).z<<std::endl;
-	      }
-
+		if(showDisplay)
 		while(ros::ok())
 		{
 			std::cout<<"size of pointcloud:"<<refinedMap.Points.size()<<std::endl;
@@ -855,12 +862,8 @@ void MAP::swap()
 				std::cout<<"publishing new points before copy"<<std::endl;
 			KeyFramePoints.publish(refinedMap.Points);
 			cvWaitKey(5000);
-			cvWaitKey(5000);
-			if(showDisplay)
-				std::cout<<"publishing new points after copy"<<std::endl;
-			KeyFramePoints.publish(mapCloud);
-			cvWaitKey(5000);
 		}
+		exit;
 
 	}
 

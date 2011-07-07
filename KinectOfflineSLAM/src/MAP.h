@@ -114,7 +114,7 @@ private:
 	IplImage *callback_image;
 	IplImage* imgadd;
 	CvPoint circle;
-
+	string path;
 	PointCloud kinectCloud[2];
 	PointCloud callbackCloud;
     PointCloud FeaturePointCloud[2];
@@ -203,7 +203,7 @@ private:
 
 public:
 	//Constructor for the class
-	MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,bool verbose, int near_keyframe_inliers);
+	MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,bool verbose, int near_keyframe_inliers,string filepath);
 	//Destructor for the class
 	~MAP(){};
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
