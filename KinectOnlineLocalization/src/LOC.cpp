@@ -319,7 +319,7 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 					}
 
 					Eigen::Matrix4f transformToMap;
-					computeTransformationToMap(FrameData[0],tmp_map, transfromToMap,ransacInlierToMap);
+					computeTransformationToMap(FrameData[0],tmp_map, transformToMap,ransacInlierToMap);
 
 					if(ransacInlierToMap>minimal_inliers)
 						transformation_=transformToMap;
