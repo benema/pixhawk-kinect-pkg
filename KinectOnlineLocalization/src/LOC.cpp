@@ -48,6 +48,7 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 	take_vicon=false;
 	vicontransform=Eigen::Matrix4f::Identity();
 	map_loaded=false;
+	computed_initial_position=false;
 
 
 
@@ -109,7 +110,7 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 					readfile.read((char *)(&tmpPoint.x),sizeof(tmpPoint.x));
 					readfile.read((char *)(&tmpPoint.y),sizeof(tmpPoint.y));
 					readfile.read((char *)(&tmpPoint.z),sizeof(tmpPoint.z));
-//					std::cout<<"tmpPoint.z"<<tmpPoint.z<<std::endl;
+					//					std::cout<<"tmpPoint.z"<<tmpPoint.z<<std::endl;
 					copiedmap.Points.push_back(tmpPoint);
 				}
 				int rows,cols;
@@ -135,18 +136,21 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 				//					std::cout<<"couldn't open file"<<std::endl;
 				//					return;
 				//				}
-//				readfile.read((char *)(&copiedmap),sizeof(copiedmap));
-//				readfile.close();
+				//				readfile.read((char *)(&copiedmap),sizeof(copiedmap));
+				//				readfile.close();
 				map_loaded=true;
 
-//				std::cout<<"size of points"<<copiedmap.Points.size()<<std::endl;
+				//				std::cout<<"size of points"<<copiedmap.Points.size()<<std::endl;
+
+				kdtree.setInputCloud(copiedmap.Points.makeShared());
 
 				if(showDisplay)
 				{
 					std::cout<<"map copied"<<std::endl;
 					//					std::cout<<"copiedmap.pooints.x"<<copiedmap.Points.points.at(0).x<<std::endl;
-//					std::cout<<"copiedmap.descripotr:"<<copiedmap.Descriptor<<std::endl;
+					//					std::cout<<"copiedmap.descripotr:"<<copiedmap.Descriptor<<std::endl;
 				}
+
 			}
 			if(called==1&&map_loaded)
 			{
@@ -154,6 +158,12 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 					start=clock();
 
 				cvCopy(callback_image,cv_image[0]);
+				if(showDisplay)
+				{
+					cvShowImage("RGB Image 1", cv_image[0]);
+					cvWaitKey(30);
+
+				}
 				kinectCloud[0]=callbackCloud;
 				kinectCloud[0].header.frame_id="/pgraph";
 				called=0;
@@ -193,8 +203,133 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 				FrameData[0].Keypoints=kpts[0];
 				FrameData[0].KinectCloud=kinectCloud[0];
 
-				//do RANSAC and compute the transforamtion
-				computeTransformationToMap(FrameData[0],copiedmap, transformation_);
+				int ransacInlierToMap;
+				int ransacInlierToFrame;
+
+				//do RANSAC and compute the transforamtion the first time
+				if(computed_initial_position==false)
+				{
+					computeTransformationToMap(FrameData[0],copiedmap, transformation_,ransacInlierToMap);
+
+					if(ransacInlierToMap>minimal_inliers)
+					{
+						computed_initial_position=true;
+						swapSingleFrame();
+					}
+					else
+					{
+						if(showDisplay)
+							std::cout<<"couldn't initialize on map..."<<std::endl;
+					}
+				}
+				else
+				{
+					Eigen::Matrix4f estimated_trans;
+					//estimate the transformation
+
+					//					std::cout<<"FrameData[1].Descriptor.size"<<FrameData[1].Descriptor.size<<std::endl;
+					computeTransformationBetweenFrameData(FrameData[0],FrameData[1],estimated_trans,ransacInlierToFrame);
+					//					estimated_trans=Eigen::Matrix4f::Identity();
+
+					if(ransacInlierToFrame>minimal_inliers)
+						transformation_=estimated_trans*transformation_;
+
+					if(showDisplay)
+						std::cout<<"estimtaed_trans:"<<std::endl<<estimated_trans<<std::endl;
+
+					//computing the indices in front of the camera
+					if(showDisplay)
+						start_match=clock();
+					Eigen::Vector3f dist_point_vec(0,0,1.4);
+					Eigen::Matrix4f dist_point_mat=Eigen::Matrix4f::Identity();
+					dist_point_mat.block<3,1>(0,3)=dist_point_vec;
+					dist_point_mat=transformation_*dist_point_mat;
+					//				std::cout<<"distpointmat"<<std::endl<<dist_point_mat<<std::endl;
+
+					Point searchpoint;
+					dist_point_vec=dist_point_mat.block<3,1>(0,3);
+					searchpoint.x=dist_point_vec[0];
+					searchpoint.y=dist_point_vec[1];
+					searchpoint.z=dist_point_vec[2];
+
+
+					std::vector<int> indices_first;
+					std::vector<float> distances_first;
+					kdtree.radiusSearch(searchpoint,1.2,indices_first,distances_first);
+
+					dist_point_vec[0]=0;
+					dist_point_vec[1]=0;
+					dist_point_vec[2]=2.6;
+
+					dist_point_mat.block<3,1>(0,3)=dist_point_vec;
+
+					dist_point_mat=transformation_*dist_point_mat;
+
+					dist_point_vec=dist_point_mat.block<3,1>(0,3);
+					searchpoint.x=dist_point_vec[0];
+					searchpoint.y=dist_point_vec[1];
+					searchpoint.z=dist_point_vec[2];
+
+					std::vector<int> indices_second;
+					std::vector<float> distances_second;
+					kdtree.radiusSearch(searchpoint,2,indices_second,distances_second);
+
+					std::vector<int> indices_total;
+					indices_total=indices_first;
+					indices_total.insert(indices_total.end(),indices_second.begin(),indices_second.end());
+
+					std::sort(indices_total.begin(), indices_total.end());
+					indices_total.erase(std::unique(indices_total.begin(), indices_total.end()), indices_total.end());
+
+					//				std::cout<<"indices_first"<<std::endl;
+					//				for(uint i=0;i<indices_first.size();i++)
+					//					std::cout<<indices_first.at(i)<<std::endl;
+					//				std::cout<<"indices_second"<<std::endl;
+					//				for(uint i=0;i<indices_second.size();i++)
+					//					std::cout<<indices_second.at(i)<<std::endl;
+					//				std::cout<<"indices_total"<<std::endl;
+					//				for(uint i=0;i<indices_total.size();i++)
+					//					std::cout<<indices_total.at(i)<<std::endl;
+
+					struct MapData tmp_map;
+					tmp_map.Descriptor.flags=copiedmap.Descriptor.flags;
+					tmp_map.Descriptor.dims=copiedmap.Descriptor.dims;
+					tmp_map.Descriptor.cols=copiedmap.Descriptor.cols;
+					tmp_map.Descriptor.step[0]=copiedmap.Descriptor.step[0];
+					tmp_map.Descriptor.step[1]=copiedmap.Descriptor.step[1];
+
+					for(uint i=0;i<indices_total.size();i++)
+					{
+						tmp_map.Points.push_back(copiedmap.Points.points.at(i));
+						tmp_map.Descriptor.push_back(copiedmap.Descriptor.row(i));
+					}
+					if(showDisplay)
+					{
+						end_match=clock();
+						std::cout<<"compute indices takes"<<(double(end_match)-double(start_match))/double(CLOCKS_PER_SEC);
+
+						PointCloud SeenPoints;
+						SeenPoints.header.frame_id="/pgraph";
+						if(showDisplay)
+							std::cout<<"size of indices"<<indices_total.size()<<std::endl;
+						for(uint i=0;i<indices_total.size();i++)
+							SeenPoints.points.push_back(copiedmap.Points.points.at(indices_total.at(i)));
+
+						KeyFramePoints.publish(SeenPoints);
+					}
+
+					Eigen::Matrix4f transformToMap;
+					computeTransformationToMap(FrameData[0],tmp_map, transfromToMap,ransacInlierToMap);
+
+					if(ransacInlierToMap>minimal_inliers)
+						transformation_=transformToMap;
+
+					if(ransacInlierToFrame>keyframe_inliers)
+						swapSingleFrame();
+
+				}
+
+
 
 				Eigen::Matrix3f rot_matrix=transformation_.block<3,3>(0,0);
 				Eigen::Vector3f trans_vec=transformation_.block<3,1>(0,3);
@@ -218,7 +353,7 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 					cameraPose.pose.orientation.z=quat_rot.z();
 
 					cameraPose_pub.publish(cameraPose);
-					KeyFramePoints.publish(copiedmap.Points);
+					//					KeyFramePoints.publish(copiedmap.Points);
 				}
 
 
@@ -732,7 +867,7 @@ void LOC::swap()
 {
 
 	if(showDisplay)
-		std::cout<<"next_keyframe"<<std::endl;
+		std::cout<<"swapping"<<std::endl;
 
 	FrameData[0].Descriptor=FrameData[1].Descriptor;
 	FrameData[0].Points=FrameData[1].Points;
@@ -759,8 +894,21 @@ void LOC::swap()
 
 }
 
-void LOC::computeTransformationToMap(struct FrameData& from, struct MapData &map, Eigen::Matrix4f &transform)
+void LOC::swapSingleFrame()
 {
+
+	if(showDisplay)
+		std::cout<<"swapping"<<std::endl;
+
+	FrameData[1].Descriptor=FrameData[0].Descriptor;
+	FrameData[1].Points=FrameData[0].Points;
+
+}
+
+void LOC::computeTransformationToMap(struct FrameData& from, struct MapData &map, Eigen::Matrix4f &transform,int &inlier)
+{
+	if(showDisplay)
+		std::cout<<"in computetransform to map"<<std::endl;
 	Eigen::Vector3f tmp_dist;
 	vector<cv::DMatch> matches;
 	std::vector<int> corr_Keyframe;
@@ -772,11 +920,18 @@ void LOC::computeTransformationToMap(struct FrameData& from, struct MapData &map
 	Feature_Keyframe[1].header.frame_id="/pgraph";
 
 
-//	std::cout<<"mapdescripotr:"<<map.Descriptor<<std::endl;
-
+	//	std::cout<<"mapdescripotr:"<<map.Descriptor<<std::endl;
+	if(showDisplay)
+		start_match=clock();
 	matchFeature(from.Descriptor,map.Descriptor,matches);
 	if(showDisplay)
+	{
+		end_match=clock();
 		std::cout<<"matching features: "<<matches.size()<<std::endl;
+		std::cout<<"and it takes"<<(double(end_match)-double(start_match))/double(CLOCKS_PER_SEC);
+
+
+	}
 
 	for (size_t i = 0; i < matches.size(); i++)
 	{
@@ -826,10 +981,97 @@ void LOC::computeTransformationToMap(struct FrameData& from, struct MapData &map
 	}
 	if(showDisplay)
 		std::cout<<"ransac inliers:"<<corr_Keyframe_inliers.size()<<std::endl;
+	inlier=corr_Keyframe_inliers.size();
+
+
+	pcl::estimateRigidTransformationSVD(Feature_Keyframe[0],corr_Keyframe_inliers,Feature_Keyframe[1],corr_Keyframe_inliers,transform);
+	if(showDisplay)
+		std::cout<<"transform:"<<transform<<std::endl;
+
+
+}
+
+void LOC::computeTransformationBetweenFrameData(struct FrameData& from, struct FrameData &map, Eigen::Matrix4f &transform, int &inlier)
+{
+	if(showDisplay)
+		std::cout<<"in computetransform between framedata"<<std::endl;
+	Eigen::Vector3f tmp_dist;
+	vector<cv::DMatch> matches;
+	std::vector<int> corr_Keyframe;
+	std::vector<int> corr_Keyframe_inliers;
+	std::vector<int> corr_Keyframe_inliers_tmp;
+	std::vector<int> corr_Keyframe_outliers;
+	PointCloud Feature_Keyframe[2];
+	Feature_Keyframe[0].header.frame_id="/pgraph";
+	Feature_Keyframe[1].header.frame_id="/pgraph";
+
+
+	//	std::cout<<"mapdescripotr:"<<map.Descriptor<<std::endl;
+	if(showDisplay)
+		start_match=clock();
+	matchFeature(from.Descriptor,map.Descriptor,matches);
+	if(showDisplay)
+	{
+		end_match=clock();
+		std::cout<<"matching features: "<<matches.size()<<std::endl;
+		std::cout<<"and it takes"<<(double(end_match)-double(start_match))/double(CLOCKS_PER_SEC);
+
+
+	}
+
+	for (size_t i = 0; i < matches.size(); i++)
+	{
+		Feature_Keyframe[0].push_back(from.Points.points[matches[i].queryIdx]);
+		corr_Keyframe.push_back(i);
+		Feature_Keyframe[1].push_back(map.Points.points[matches[i].trainIdx]);
+
+	}
+
+	//RANSAC
+
+
+	typedef pcl::SampleConsensusModelRegistration<Point>::Ptr SampleConsensusModelRegistrationPtr;
+
+	SampleConsensusModelRegistrationPtr model;
+
+
+	model.reset (new pcl::SampleConsensusModelRegistration<Point> (Feature_Keyframe[0].makeShared (), corr_Keyframe));
+	// Pass the target_indices
+
+
+	model->setInputTarget (Feature_Keyframe[1].makeShared(), corr_Keyframe);
+	// Create a RANSAC model
+
+	pcl::RandomSampleConsensus<Point> sac (model, ransac_acc);
+	sac.setMaxIterations (ransac_it);
+
+
+	// Compute the set of inliers
+
+	if (!sac.computeModel (5))
+	{
+		corr_Keyframe_inliers = corr_Keyframe;
+	}
+	else
+	{
+		std::vector<int> inliers;
+		// Get the inliers
+		sac.getInliers (inliers);
+		corr_Keyframe_inliers.resize (inliers.size ());
+		// Copy just the inliers
+		for (size_t i = 0; i < inliers.size (); ++i)
+		{
+			corr_Keyframe_inliers[i] = corr_Keyframe[inliers[i]];
+		}
+
+	}
+	if(showDisplay)
+		std::cout<<"ransac inliers:"<<corr_Keyframe_inliers.size()<<std::endl;
+	inlier=corr_Keyframe_inliers.size();
+
 
 	pcl::estimateRigidTransformationSVD(Feature_Keyframe[0],corr_Keyframe_inliers,Feature_Keyframe[1],corr_Keyframe_inliers,transform);
 	if(showDisplay)
 		std::cout<<"transform:"<<transform<<std::endl;
 }
-
 

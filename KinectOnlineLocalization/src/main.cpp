@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	ros::init(argc, argv, "KinectOfflineSLAM");
+	ros::init(argc, argv, "KinectOnlineLocalization");
 		std::cout<<"waiting for kinect data"<<std::endl;
 		std::cout<<"ransac_threshold:"<<ransac_threshold<<"ransac_it:"<<ransac_it<<std::endl
 				<<"min_inliers:"<<min_inlier<<"min_keyframe:"<<min_keyframe<<"verbose:"<<verbose<<std::endl

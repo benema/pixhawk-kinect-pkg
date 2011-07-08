@@ -40,4 +40,4 @@ INCLUDE_DIRECTORIES(
   ${GLIB2_INTERNAL_INCLUDE_DIR}
 )
 
-rosbuild_add_executable(KinectOnlineLoclization src/main.cpp src/LOC.h src/LOC.cpp)
+rosbuild_add_executable(KinectOnlineLocalization src/main.cpp src/LOC.h src/LOC.cpp)

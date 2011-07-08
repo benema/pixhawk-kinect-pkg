@@ -24,6 +24,7 @@
 #include <message_filters/time_synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
 #include <pcl/common/eigen.h>
+#include <pcl/kdtree/kdtree_flann.h>
 //maybe
 //#include <string>
 #include <time.h>
@@ -150,7 +151,10 @@ private:
     bool map_loaded;
     time_t start;
     time_t end;
-
+    time_t start_match;
+    time_t end_match;
+    pcl::KdTreeFLANN<Point> kdtree;
+    bool computed_initial_position;
 
 
 
@@ -185,7 +189,11 @@ private:
 	void createCorrespondingPointcloud(struct FrameData& Data0,PointCloud& Cloud0,struct FrameData& Data1,PointCloud& Cloud1,std::vector<int>& correspondvector,vector<cv::DMatch>& matches,bool show,std::vector<cv::KeyPoint>& kpts0,std::vector<cv::KeyPoint>& kpts1);
 	void RANSAC();
 	void swap();
-	void computeTransformationToMap(struct FrameData& from, struct MapData &map, Eigen::Matrix4f &transform);
+	void swapSingleFrame();
+	void computeTransformationToMap(struct FrameData& from, struct MapData &map, Eigen::Matrix4f &transform,int &inlier);
+	void computeTransformationBetweenFrameData(struct FrameData& from, struct FrameData &map, Eigen::Matrix4f &transform,int &inlier);
+
+
 
 
 
