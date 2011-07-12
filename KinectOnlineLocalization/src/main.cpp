@@ -21,10 +21,10 @@ static GOptionEntry entries[] =
 		{ "min_inlier", 'm', 0, G_OPTION_ARG_INT, &min_inlier, "Minimal inlier to compute transformation (only for odometry to last frame)", "70" },
 		{ "min_keyframe", 'k', 0, G_OPTION_ARG_INT, &min_keyframe, "Minimal inlier to keep the same Keyframe (only for odometry to last frame)", "130" },
 		{ "filepath", 'f', 0, G_OPTION_ARG_STRING, &filepath, "path of file in which map is stored", "mapdata.bin" },
-		{ "z1", 'z', 0, G_OPTION_ARG_DOUBLE, &filepath, "Distance of first circle to compute seen Keyframes of map", "1.4" },
-		{ "z2", 'y', 0, G_OPTION_ARG_DOUBLE, &filepath, "Distance of second circle to compute seen Keyframes of map", "3" },
-		{ "r1", 'x', 0, G_OPTION_ARG_DOUBLE, &filepath, "Radius of first circle to compute seen Keyframes of map", "1.3" },
-		{ "r2", 'w', 0, G_OPTION_ARG_DOUBLE, &filepath, "Radius of second circle to compute seen Keyframes of map", "2.6" },
+		{ "z1", 'z', 0, G_OPTION_ARG_DOUBLE, &z1, "Distance of first circle to compute seen Keyframes of map", "1.4" },
+		{ "z2", 'y', 0, G_OPTION_ARG_DOUBLE, &z2, "Distance of second circle to compute seen Keyframes of map", "3" },
+		{ "r1", 'x', 0, G_OPTION_ARG_DOUBLE, &r1, "Radius of first circle to compute seen Keyframes of map", "1.3" },
+		{ "r2", 'w', 0, G_OPTION_ARG_DOUBLE, &r2, "Radius of second circle to compute seen Keyframes of map", "2.6" },
 		{ NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, 0 }
 
 };

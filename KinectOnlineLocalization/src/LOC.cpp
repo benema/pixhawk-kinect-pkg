@@ -163,12 +163,12 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 					start=clock();
 
 				cvCopy(callback_image,cv_image[0]);
-				if(showDisplay)
-				{
-					cvShowImage("RGB Image 1", cv_image[0]);
-					cvWaitKey(30);
-
-				}
+//				if(showDisplay)
+//				{
+//					cvShowImage("RGB Image 1", cv_image[0]);
+//					cvWaitKey(30);
+//
+//				}
 				kinectCloud[0]=callbackCloud;
 				kinectCloud[0].header.frame_id="/pgraph";
 				called=0;

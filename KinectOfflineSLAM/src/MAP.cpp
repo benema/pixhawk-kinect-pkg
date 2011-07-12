@@ -165,9 +165,12 @@ MAP::MAP(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 
 				KeyframeDataVector.push_back(FrameData[counter]);
 
+				if(showDisplay)
+				{
 				std::cout<<"vicontransform:"<<std::endl<<vicontransform<<std::endl;
 				std::cout<<"size of keyframedatavector"<<KeyframeDataVector.size()<<std::endl;
 				std::cout<<"Keyframedatavector.at(0).transformation after vicon"<<std::endl<<KeyframeDataVector.at(0).Transformation<<std::endl;
+				}
 			}
 
 			called_first_time=false;
@@ -400,6 +403,7 @@ void MAP::RANSACandTransformation()
 
 //	if(showDisplay)
 		std::cout<<"RANSACINLIERS"<<correspondences_inliers.size()<<std::endl;
+		std::cout<<"nextkeyframe: "<<next_keyframe<<std::endl;
 }
 
 
@@ -508,8 +512,10 @@ void MAP::RANSAC()
 	}
 	ransac_inliers=correspondences_source_good.size();
 
+	Eigen::Vector3f distVec=transformation_.block<3,1>(3,0);
+
 	//Check whether we need next keyframe
-	if(ransac_inliers<min_keyframe_inlier)
+	if((ransac_inliers<min_keyframe_inlier)&&distVec.norm()>.2)
 		next_keyframe=true;
 	else
 		next_keyframe=false;
@@ -978,13 +984,17 @@ void MAP::refineMapWithTORO(std::vector<struct FrameData>* map)
 
 	}
 	Eigen::Matrix4f rot=systemRot*finalMAP.at(0).Transformation.inverse();
+	if(showDisplay)
+	{
 	std::cout<<"rot"<<std::endl<<rot<<std::endl;
 	std::cout<<"first transformation after torobefore transform:"<<std::endl<<finalMAP.at(0).Transformation<<std::endl;
 	std::cout<<"systemrot:"<<std::endl<<systemRot<<std::endl;
+	}
 //
 
 	for(int k=0;k<finalMAP.size();k++)
 		finalMAP.at(k).Transformation=rot*finalMAP.at(k).Transformation;
+	if(showDisplay)
 	std::cout<<"first transformation after toroafter transfrom:"<<std::endl<<finalMAP.at(0).Transformation<<std::endl;
 
 
@@ -1057,11 +1067,11 @@ void MAP::findConnectionsBetweenKeyframes(int number,struct FrameData& from, std
 
 			}
 
-			if(showDisplay)
-			{
+//			if(showDisplay)
+//			{
 //				if(showDisplay)
 					ROS_ERROR("number of correspondences between %d and %d are: %d",number,c,corr_Keyframe_inliers.size());
-			}
+//			}
 			ransac_inliers=corr_Keyframe_inliers.size();
 
 
