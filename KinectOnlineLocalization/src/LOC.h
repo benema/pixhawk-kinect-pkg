@@ -87,6 +87,7 @@ private:
 	ros::Subscriber viconSubscriber;
 	ros::Subscriber commandSubscriber;
     ros::Publisher KeyFramePoints;
+    ros::Publisher BubbleCenter;
 	ros::Publisher cameraPose_pub;
 	ros::Publisher bodyPoseStamped_pub;
 
@@ -102,6 +103,10 @@ private:
 	bool showtext;
 	int type;
 	string path;
+	float dist_z1;
+	float dist_z2;
+	float radius1;
+	float radius2;
 
 
 	//stuff for image fast image analysis:
@@ -192,7 +197,7 @@ private:
 	void swapSingleFrame();
 	void computeTransformationToMap(struct FrameData& from, struct MapData &map, Eigen::Matrix4f &transform,int &inlier);
 	void computeTransformationBetweenFrameData(struct FrameData& from, struct FrameData &map, Eigen::Matrix4f &transform,int &inlier);
-
+	void computePointsWithin2Circles(pcl::KdTreeFLANN<Point> &tree, float zdist1, float zdist2, float radius1, float radius2, Eigen::Matrix4f estimated_trans, struct MapData &mapin, struct MapData &mapout,PointCloud &searchpoints);
 
 
 
@@ -209,7 +214,7 @@ private:
 
 public:
 	//Constructor for the class
-	LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,bool verbose, int near_keyframe_inliers,string filepath);
+	LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,bool verbose, int near_keyframe_inliers,string filepath,float z1, float z2, float r1, float r2);
 	//Destructor for the class
 	~LOC(){};
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW

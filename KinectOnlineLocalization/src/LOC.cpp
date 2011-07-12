@@ -13,7 +13,7 @@ static CvScalar colors[] =
 		{{255,255,255}}
 };
 
-LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,bool verbose, int type_of_odometry,string filepath)
+LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,bool verbose, int type_of_odometry,string filepath, float z1, float z2, float r1, float r2)
 {
 	//Initialization of start parameters
 	path=filepath;
@@ -23,6 +23,10 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 	ransac_it=iterations;
 	min_inliers=minimal_inliers;
 	min_keyframe_inlier=keyframe_inliers;
+	dist_z1=z1;
+	dist_z2=z2;
+	radius1=r1;
+	radius2=r2;
 
 	//other variables
 	detector = new cv::GridAdaptedFeatureDetector(new cv::FastFeatureDetector,500);
@@ -71,6 +75,7 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 
 
 	KeyFramePoints=n.advertise<PointCloud>("KinectOnlineLocalization/keyframepoints",1);
+	BubbleCenter=n.advertise<PointCloud>("KinectOnlineLocalization/bubbles",1);
 	cameraPose_pub=n.advertise<geometry_msgs::PoseStamped>("/KinectOnlineLocalization/helicopterpose",1);
 	bodyPoseStamped_pub=n.advertise<geometry_msgs::PoseStamped>("/toMAVLINK/bodyPoseStamped",1);
 
@@ -211,7 +216,7 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 				{
 					computeTransformationToMap(FrameData[0],copiedmap, transformation_,ransacInlierToMap);
 
-					if(ransacInlierToMap>minimal_inliers)
+					if(ransacInlierToMap>min_inliers)
 					{
 						computed_initial_position=true;
 						swapSingleFrame();
@@ -231,103 +236,70 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 					computeTransformationBetweenFrameData(FrameData[0],FrameData[1],estimated_trans,ransacInlierToFrame);
 					//					estimated_trans=Eigen::Matrix4f::Identity();
 
-					if(ransacInlierToFrame>minimal_inliers)
+
+
+					if(ransacInlierToFrame>min_inliers)
+					{
 						transformation_=estimated_trans*transformation_;
+						swapSingleFrame();
+					}
+					else
+						if(showDisplay)
+							ROS_ERROR("ransacInlierToFrame: %d", ransacInlierToFrame);
 
 					if(showDisplay)
-						std::cout<<"estimtaed_trans:"<<std::endl<<estimated_trans<<std::endl;
+						std::cout<<"starttransform:"<<transformation_<<std::endl;
+
 
 					//computing the indices in front of the camera
 					if(showDisplay)
 						start_match=clock();
-					Eigen::Vector3f dist_point_vec(0,0,1.4);
-					Eigen::Matrix4f dist_point_mat=Eigen::Matrix4f::Identity();
-					dist_point_mat.block<3,1>(0,3)=dist_point_vec;
-					dist_point_mat=transformation_*dist_point_mat;
-					//				std::cout<<"distpointmat"<<std::endl<<dist_point_mat<<std::endl;
-
-					Point searchpoint;
-					dist_point_vec=dist_point_mat.block<3,1>(0,3);
-					searchpoint.x=dist_point_vec[0];
-					searchpoint.y=dist_point_vec[1];
-					searchpoint.z=dist_point_vec[2];
-
-
-					std::vector<int> indices_first;
-					std::vector<float> distances_first;
-					kdtree.radiusSearch(searchpoint,1.2,indices_first,distances_first);
-
-					dist_point_vec[0]=0;
-					dist_point_vec[1]=0;
-					dist_point_vec[2]=2.6;
-
-					dist_point_mat.block<3,1>(0,3)=dist_point_vec;
-
-					dist_point_mat=transformation_*dist_point_mat;
-
-					dist_point_vec=dist_point_mat.block<3,1>(0,3);
-					searchpoint.x=dist_point_vec[0];
-					searchpoint.y=dist_point_vec[1];
-					searchpoint.z=dist_point_vec[2];
-
-					std::vector<int> indices_second;
-					std::vector<float> distances_second;
-					kdtree.radiusSearch(searchpoint,2,indices_second,distances_second);
-
-					std::vector<int> indices_total;
-					indices_total=indices_first;
-					indices_total.insert(indices_total.end(),indices_second.begin(),indices_second.end());
-
-					std::sort(indices_total.begin(), indices_total.end());
-					indices_total.erase(std::unique(indices_total.begin(), indices_total.end()), indices_total.end());
-
-					//				std::cout<<"indices_first"<<std::endl;
-					//				for(uint i=0;i<indices_first.size();i++)
-					//					std::cout<<indices_first.at(i)<<std::endl;
-					//				std::cout<<"indices_second"<<std::endl;
-					//				for(uint i=0;i<indices_second.size();i++)
-					//					std::cout<<indices_second.at(i)<<std::endl;
-					//				std::cout<<"indices_total"<<std::endl;
-					//				for(uint i=0;i<indices_total.size();i++)
-					//					std::cout<<indices_total.at(i)<<std::endl;
 
 					struct MapData tmp_map;
-					tmp_map.Descriptor.flags=copiedmap.Descriptor.flags;
-					tmp_map.Descriptor.dims=copiedmap.Descriptor.dims;
-					tmp_map.Descriptor.cols=copiedmap.Descriptor.cols;
-					tmp_map.Descriptor.step[0]=copiedmap.Descriptor.step[0];
-					tmp_map.Descriptor.step[1]=copiedmap.Descriptor.step[1];
 
-					for(uint i=0;i<indices_total.size();i++)
-					{
-						tmp_map.Points.push_back(copiedmap.Points.points.at(i));
-						tmp_map.Descriptor.push_back(copiedmap.Descriptor.row(i));
-					}
+					PointCloud searchpoints;
+					searchpoints.header.frame_id="/pgraph";
+
+					computePointsWithin2Circles(kdtree, dist_z1,dist_z2, radius1, radius2, transformation_, copiedmap, tmp_map,searchpoints);
+
 					if(showDisplay)
 					{
 						end_match=clock();
 						std::cout<<"compute indices takes"<<(double(end_match)-double(start_match))/double(CLOCKS_PER_SEC);
 
-						PointCloud SeenPoints;
-						SeenPoints.header.frame_id="/pgraph";
-						if(showDisplay)
-							std::cout<<"size of indices"<<indices_total.size()<<std::endl;
-						for(uint i=0;i<indices_total.size();i++)
-							SeenPoints.points.push_back(copiedmap.Points.points.at(indices_total.at(i)));
 
-						KeyFramePoints.publish(SeenPoints);
+						tmp_map.Points.header.frame_id="/pgraph";
+
+						std::cout<<"size of indices"<<tmp_map.Points.size()<<std::endl;
+
+						KeyFramePoints.publish(tmp_map.Points);
+						BubbleCenter.publish(searchpoints);
 					}
 
 					Eigen::Matrix4f transformToMap;
 					computeTransformationToMap(FrameData[0],tmp_map, transformToMap,ransacInlierToMap);
 
-					if(ransacInlierToMap>minimal_inliers)
+					if(ransacInlierToMap>min_inliers)
+					{
 						transformation_=transformToMap;
-
-					if(ransacInlierToFrame>keyframe_inliers)
 						swapSingleFrame();
+					}
+					else
+					{
+						if(showDisplay)
+						{
+							ROS_ERROR("ransacInlierToMap: %d",ransacInlierToMap);
+							ROS_WARN("ransacInlierToFrame: %d", ransacInlierToFrame);
+							computeTransformationToMap(FrameData[0],copiedmap,transformToMap,ransacInlierToMap);
+							ROS_ERROR("ransacInlierToWholeMap: %d",ransacInlierToMap);
+
+						}
+					}
+
 
 				}
+				if(showDisplay)
+					std::cout<<"endtransform:"<<transformation_<<std::endl;
 
 
 
@@ -1074,4 +1046,81 @@ void LOC::computeTransformationBetweenFrameData(struct FrameData& from, struct F
 	if(showDisplay)
 		std::cout<<"transform:"<<transform<<std::endl;
 }
+
+void LOC::computePointsWithin2Circles(pcl::KdTreeFLANN<Point> &tree, float zdist1, float zdist2, float radius1, float radius2, Eigen::Matrix4f estimated_trans, struct MapData &mapin, struct MapData &mapout,PointCloud &searchpoints)
+{
+
+	Eigen::Vector3f dist_point_vec(0,0,zdist1);
+	Eigen::Matrix4f dist_point_mat=Eigen::Matrix4f::Identity();
+	dist_point_mat.block<3,1>(0,3)=dist_point_vec;
+	dist_point_mat=estimated_trans*dist_point_mat;
+	//				std::cout<<"distpointmat"<<std::endl<<dist_point_mat<<std::endl;
+
+	Point searchpoint;
+	dist_point_vec=dist_point_mat.block<3,1>(0,3);
+	searchpoint.x=dist_point_vec[0];
+	searchpoint.y=dist_point_vec[1];
+	searchpoint.z=dist_point_vec[2];
+
+	searchpoints.points.push_back(searchpoint);
+
+	std::vector<int> indices_first;
+	std::vector<float> distances_first;
+	tree.radiusSearch(searchpoint,radius1,indices_first,distances_first);
+
+	dist_point_vec[0]=0;
+	dist_point_vec[1]=0;
+	dist_point_vec[2]=zdist2;
+
+	dist_point_mat=Eigen::Matrix4f::Identity();
+
+	dist_point_mat.block<3,1>(0,3)=dist_point_vec;
+
+	dist_point_mat=estimated_trans*dist_point_mat;
+
+	dist_point_vec=dist_point_mat.block<3,1>(0,3);
+	searchpoint.x=dist_point_vec[0];
+	searchpoint.y=dist_point_vec[1];
+	searchpoint.z=dist_point_vec[2];
+
+	searchpoints.points.push_back(searchpoint);
+
+	std::vector<int> indices_second;
+	std::vector<float> distances_second;
+	tree.radiusSearch(searchpoint,radius2,indices_second,distances_second);
+
+	std::vector<int> indices_total;
+	indices_total=indices_first;
+	indices_total.insert(indices_total.end(),indices_second.begin(),indices_second.end());
+
+	std::sort(indices_total.begin(), indices_total.end());
+	indices_total.erase(std::unique(indices_total.begin(), indices_total.end()), indices_total.end());
+
+	//				std::cout<<"indices_first"<<std::endl;
+	//				for(uint i=0;i<indices_first.size();i++)
+		//					std::cout<<indices_first.at(i)<<std::endl;
+	//				std::cout<<"indices_second"<<std::endl;
+	//				for(uint i=0;i<indices_second.size();i++)
+	//					std::cout<<indices_second.at(i)<<std::endl;
+	//				std::cout<<"indices_total"<<std::endl;
+	//				for(uint i=0;i<indices_total.size();i++)
+	//					std::cout<<indices_total.at(i)<<std::endl;
+
+	struct MapData tmp_map;
+	tmp_map.Descriptor.flags=mapin.Descriptor.flags;
+	tmp_map.Descriptor.dims=mapin.Descriptor.dims;
+	tmp_map.Descriptor.cols=mapin.Descriptor.cols;
+	tmp_map.Descriptor.step[0]=mapin.Descriptor.step[0];
+	tmp_map.Descriptor.step[1]=mapin.Descriptor.step[1];
+
+	for(uint i=0;i<indices_total.size();i++)
+	{
+		tmp_map.Points.push_back(mapin.Points.points.at(indices_total.at(i)));
+		tmp_map.Descriptor.push_back(mapin.Descriptor.row(indices_total.at(i)));
+	}
+
+	mapout=tmp_map;
+
+}
+
 

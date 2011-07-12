@@ -7,6 +7,10 @@ int type=0;
 int min_inlier=70;
 int min_keyframe=130;
 std::string filepath="mapdata.bin";
+double z1=1.4;
+double z2=3;
+double r1=1.3;
+double r2=2.6;
 
 static GOptionEntry entries[] =
 {
@@ -17,6 +21,10 @@ static GOptionEntry entries[] =
 		{ "min_inlier", 'm', 0, G_OPTION_ARG_INT, &min_inlier, "Minimal inlier to compute transformation (only for odometry to last frame)", "70" },
 		{ "min_keyframe", 'k', 0, G_OPTION_ARG_INT, &min_keyframe, "Minimal inlier to keep the same Keyframe (only for odometry to last frame)", "130" },
 		{ "filepath", 'f', 0, G_OPTION_ARG_STRING, &filepath, "path of file in which map is stored", "mapdata.bin" },
+		{ "z1", 'z', 0, G_OPTION_ARG_DOUBLE, &filepath, "Distance of first circle to compute seen Keyframes of map", "1.4" },
+		{ "z2", 'y', 0, G_OPTION_ARG_DOUBLE, &filepath, "Distance of second circle to compute seen Keyframes of map", "3" },
+		{ "r1", 'x', 0, G_OPTION_ARG_DOUBLE, &filepath, "Radius of first circle to compute seen Keyframes of map", "1.3" },
+		{ "r2", 'w', 0, G_OPTION_ARG_DOUBLE, &filepath, "Radius of second circle to compute seen Keyframes of map", "2.6" },
 		{ NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, 0 }
 
 };
@@ -39,8 +47,9 @@ int main(int argc, char **argv)
 		std::cout<<"waiting for kinect data"<<std::endl;
 		std::cout<<"ransac_threshold:"<<ransac_threshold<<"ransac_it:"<<ransac_it<<std::endl
 				<<"min_inliers:"<<min_inlier<<"min_keyframe:"<<min_keyframe<<"verbose:"<<verbose<<std::endl
-				<<"type:"<<type<<"filepath:"<<filepath.c_str()<<std::endl;
-	LOC::LOC loc(ransac_threshold, ransac_it,min_inlier,min_keyframe,verbose, type,filepath);
+				<<"type:"<<type<<"filepath:"<<filepath.c_str()<<std::endl
+				<<"z1:"<<z1<<"z2:"<<z2<<"r1:"<<r1<<"r2:"<<r2<<std::endl;
+	LOC::LOC loc(ransac_threshold, ransac_it,min_inlier,min_keyframe,verbose, type,filepath,(float)z1,(float)z2,(float)r1,(float)r2);
 
 	return 0;
 }
