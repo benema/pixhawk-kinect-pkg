@@ -160,6 +160,7 @@ private:
     time_t end_match;
     pcl::KdTreeFLANN<Point> kdtree;
     bool computed_initial_position;
+    int times_not_calculated;
 
 
 
