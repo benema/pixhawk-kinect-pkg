@@ -87,6 +87,7 @@ private:
 	ros::Subscriber viconSubscriber;
 	ros::Subscriber commandSubscriber;
     ros::Publisher KeyFramePoints;
+    ros::Publisher WholeMap;
     ros::Publisher BubbleCenter;
 	ros::Publisher cameraPose_pub;
 	ros::Publisher bodyPoseStamped_pub;

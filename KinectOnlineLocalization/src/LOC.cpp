@@ -76,6 +76,7 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 
 
 	KeyFramePoints=n.advertise<PointCloud>("KinectOnlineLocalization/keyframepoints",1);
+	WholeMap=n.advertise<PointCloud>("KinectOnlineLocalization/wholemap",1);
 	BubbleCenter=n.advertise<PointCloud>("KinectOnlineLocalization/bubbles",1);
 	cameraPose_pub=n.advertise<geometry_msgs::PoseStamped>("/KinectOnlineLocalization/helicopterpose",1);
 	bodyPoseStamped_pub=n.advertise<geometry_msgs::PoseStamped>("/toMAVLINK/bodyPoseStamped",1);
@@ -274,6 +275,7 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 						std::cout<<"size of indices"<<tmp_map.Points.size()<<std::endl;
 
 						KeyFramePoints.publish(tmp_map.Points);
+						WholeMap.publish(copiedmap.Points);
 						BubbleCenter.publish(searchpoints);
 					}
 
@@ -300,7 +302,12 @@ LOC::LOC(float thresh, int iterations,int minimal_inliers, int keyframe_inliers,
 					}
 
 					if(times_not_calculated>4)
+					{
 						computeTransformationToMap(FrameData[0],copiedmap,transformation_,ransacInlierToMap);
+						if(showDisplay)
+						ROS_WARN("!!!!!!!!!ransacInlierToWholemap: %d", ransacInlierToMap);
+						times_not_calculated=0;
+					}
 
 
 
