@@ -46,6 +46,7 @@ $ rosservice call path 1 3
  * The DATABASE class handles all the sqlite3 work within the Pathplanner package. It opens the database to a given path and
  * copies the entries into arrays. Some code is copied from an online sqlite3 tutorial (http://freshmeat.net/articles/sqlite-tutorial).
  */
+#include <glib.h>
 #include <ros/ros.h>
 #include <math.h>
 #include "sensor_msgs/Image.h"
@@ -380,6 +381,8 @@ private:
 		vector<int> correspondences_backward;
 
 	};
+
+	std::vector<struct FrameData> finalMAP;
 //SBA
 //	struct SBAmap{
 //		std::vector<PointCloud> Points;
@@ -393,7 +396,7 @@ private:
 		int identifier;
 	};
 //SBA
-//	std::vector<struct mapPoint> SBAPoint;
+	std::vector<struct mapPoint> SBAPoint;
 	int nearest_keyframe_inliers;
 
 	struct FrameData FrameData[2];
@@ -421,12 +424,17 @@ private:
 	void commandCallback (const lcm_mavlink_ros::COMMAND& commandMsg);
 	void viconCallback (const geometry_msgs::PoseStamped& viconMsg);
 
+	bool show_text;
+
+	void findConnectionsBetweenKeyframes(int number,struct FrameData& from, std::vector<struct FrameData>& to);
+
+
 
 
 
 
 public:
-	EXTRACT(bool displ,float thresh, int iterations,int minimal_inliers, int keyframe_inliers,bool time, bool slam,int ignored, int near_keyframe_inliers, int swaps);
+	EXTRACT(bool displ,float thresh, int iterations,int minimal_inliers, int keyframe_inliers,bool verbose, bool slam,int ignored, int near_keyframe_inliers, int swaps);
 	~EXTRACT(){cvDestroyAllWindows();fclose (pFile);
 	for(uint f=0; f<track_vector.size();f++)
 		cvReleaseImage(&track_vector.at(f));

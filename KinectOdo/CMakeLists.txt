@@ -30,5 +30,16 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 #rosbuild_add_executable(example examples/example.cpp)
 #target_link_libraries(KinectOdo TORO)
+SET(
+  CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
+)
+include(cmake/FindGLIB2.cmake)
+
+FIND_PACKAGE(GLIB2 REQUIRED)
+
+INCLUDE_DIRECTORIES(
+  ${GLIB2_MAIN_INCLUDE_DIR}
+  ${GLIB2_INTERNAL_INCLUDE_DIR}
+)
 
 rosbuild_add_executable(KinectOdo src/main.cpp src/extractFeature.h src/extractFeature.cpp ../toro/trunk/treeoptimizer3.cpp ../toro/trunk/posegraph3.cpp ../toro/trunk/treeoptimizer3_iteration.cpp)
